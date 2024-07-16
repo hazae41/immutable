@@ -1,195 +1,219 @@
 import { InvalidSha256HashError } from "./errors.js"
 
-declare const FILES_AND_HASHES: [string, string][] | undefined
+export function $cache$(directory: string) {
+  return (async () => {
+    const fs = await import("fs")
+    const path = await import("path")
+    const crypto = await import("crypto")
+    const { walkSync } = await import("libs/fs/index.js")
 
-export const fileToHash = typeof FILES_AND_HASHES !== "undefined"
-  ? new Map(FILES_AND_HASHES)
-  : new Map()
+    const filesAndHashes = new Array()
 
-/**
- * Uncache all files
- */
-export async function uncache() {
-  await caches.delete("meta")
+    for (const absolute of walkSync(directory)) {
+      const text = fs.readFileSync(absolute)
+      const hash = crypto.createHash("sha256").update(text).digest("hex")
+
+      const relative = path.relative("./out", absolute)
+
+      filesAndHashes.push([`/${relative}`, hash])
+    }
+
+    return `new Cache(new Map(${JSON.stringify(filesAndHashes)}))`
+  })() as any
 }
 
-/**
- * Fetch and cache all files
- * @returns 
- */
-export async function precache() {
-  if (process.env.NODE_ENV === "development")
-    return
+export class Cache {
 
-  const promises = new Array<Promise<Response>>()
-
-  for (const [file, hash] of fileToHash)
-    promises.push(defetch(new Request(file), hash))
-
-  await Promise.all(promises)
-}
-
-/**
- * Match or fetch and cache
- * @param request 
- * @param expected 
- * @returns 
- */
-export async function defetch(request: Request, expected: string) {
-  const cache = await caches.open("meta")
+  constructor(
+    readonly files: Map<string, string>
+  ) { }
 
   /**
-   * Check cache if possible
+   * Uncache all files
    */
-  if (request.cache !== "reload") {
-    const cached = await cache.match(request)
-
-    if (cached != null)
-      /**
-       * Found
-       */
-      return cached
-
-    /**
-     * Not found
-     */
+  async uncache() {
+    await caches.delete("meta")
   }
 
   /**
-   * Fetch but skip cache-control
+   * Fetch and cache all files
+   * @returns 
    */
-  const fetched = await fetch(request, { cache: "reload" })
+  async precache() {
+    if (process.env.NODE_ENV === "development")
+      return
+
+    const promises = new Array<Promise<Response>>()
+
+    for (const [file, hash] of this.files)
+      promises.push(this.defetch(new Request(file), hash))
+
+    await Promise.all(promises)
+  }
 
   /**
-   * Remove junk properties e.g. redirected
+   * Match or fetch and cache
+   * @param request 
+   * @param expected 
+   * @returns 
    */
-  const cleaned = new Response(fetched.body, fetched)
+  async defetch(request: Request, expected: string) {
+    const cache = await caches.open("meta")
 
-  /**
-   * Errors are not verified nor cached
-   */
-  if (!cleaned.ok)
+    /**
+     * Check cache if possible
+     */
+    if (request.cache !== "reload") {
+      const cached = await cache.match(request)
+
+      if (cached != null)
+        /**
+         * Found
+         */
+        return cached
+
+      /**
+       * Not found
+       */
+    }
+
+    /**
+     * Fetch but skip cache-control
+     */
+    const fetched = await fetch(request, { cache: "reload" })
+
+    /**
+     * Remove junk properties e.g. redirected
+     */
+    const cleaned = new Response(fetched.body, fetched)
+
+    /**
+     * Errors are not verified nor cached
+     */
+    if (!cleaned.ok)
+      return cleaned
+
+    const hashBytes = new Uint8Array(await crypto.subtle.digest("SHA-256", await cleaned.clone().arrayBuffer()))
+    const hashRawHex = Array.from(hashBytes).map(b => b.toString(16).padStart(2, "0")).join("")
+
+    const received = hashRawHex
+
+    if (received !== expected)
+      throw new InvalidSha256HashError(request.url, expected, received)
+
+    cache.put(request, cleaned.clone())
+
     return cleaned
-
-  const hashBytes = new Uint8Array(await crypto.subtle.digest("SHA-256", await cleaned.clone().arrayBuffer()))
-  const hashRawHex = Array.from(hashBytes).map(b => b.toString(16).padStart(2, "0")).join("")
-
-  const received = hashRawHex
-
-  if (received !== expected)
-    throw new InvalidSha256HashError(request.url, expected, received)
-
-  cache.put(request, cleaned.clone())
-
-  return cleaned
-}
-
-/**
- * Handle fetch event
- * @param event 
- * @returns 
- */
-export function handle(event: FetchEvent) {
-  if (process.env.NODE_ENV === "development")
-    return
-
-  /**
-   * Match exact
-   */
-  const url = new URL(event.request.url)
-
-  const hash = fileToHash.get(url.pathname)
-
-  if (hash != null) {
-    /**
-     * Do magic
-     */
-    event.respondWith(defetch(event.request, hash))
-
-    /**
-     * Found
-     */
-    return
   }
 
   /**
-   * Not a directory
+   * Handle fetch event
+   * @param event 
+   * @returns 
    */
-  if (url.pathname.split("/").at(-1)!.includes("."))
+  handle(event: FetchEvent) {
+    if (process.env.NODE_ENV === "development")
+      return
+
+    /**
+     * Match exact
+     */
+    const url = new URL(event.request.url)
+
+    const hash = this.files.get(url.pathname)
+
+    if (hash != null) {
+      /**
+       * Do magic
+       */
+      event.respondWith(this.defetch(event.request, hash))
+
+      /**
+       * Found
+       */
+      return
+    }
+
+    /**
+     * Not a directory
+     */
+    if (url.pathname.split("/").at(-1)!.includes("."))
+      /**
+       * Not found
+       */
+      return
+
+    /**
+     * Match .html
+     */
+    {
+      const url = new URL(event.request.url)
+
+      url.pathname += ".html"
+
+      const hash = this.files.get(url.pathname)
+
+      if (hash != null) {
+        /**
+         * Modify mode
+         */
+        const request0 = new Request(event.request, { mode: "same-origin" })
+
+        /**
+         * Modify url
+         */
+        const request1 = new Request(url, request0)
+
+        /**
+         * Do magic
+         */
+        event.respondWith(this.defetch(request1, hash))
+
+        /**
+         * Found
+         */
+        return
+      }
+    }
+
+    /**
+     * Match /index.html
+     */
+    {
+      const url = new URL(event.request.url)
+
+      url.pathname += "/index.html"
+
+      const hash = this.files.get(url.pathname)
+
+      if (hash != null) {
+
+        /**
+         * Modify mode
+         */
+        const request0 = new Request(event.request, { mode: "same-origin" })
+
+        /**
+         * Modify url
+         */
+        const request1 = new Request(url, request0)
+
+        /**
+         * Do magic
+         */
+        event.respondWith(this.defetch(request1, hash))
+
+        /**
+         * Found
+         */
+        return
+      }
+    }
+
     /**
      * Not found
      */
     return
-
-  /**
-   * Match .html
-   */
-  {
-    const url = new URL(event.request.url)
-
-    url.pathname += ".html"
-
-    const hash = fileToHash.get(url.pathname)
-
-    if (hash != null) {
-      /**
-       * Modify mode
-       */
-      const request0 = new Request(event.request, { mode: "same-origin" })
-
-      /**
-       * Modify url
-       */
-      const request1 = new Request(url, request0)
-
-      /**
-       * Do magic
-       */
-      event.respondWith(defetch(request1, hash))
-
-      /**
-       * Found
-       */
-      return
-    }
   }
 
-  /**
-   * Match /index.html
-   */
-  {
-    const url = new URL(event.request.url)
-
-    url.pathname += "/index.html"
-
-    const hash = fileToHash.get(url.pathname)
-
-    if (hash != null) {
-
-      /**
-       * Modify mode
-       */
-      const request0 = new Request(event.request, { mode: "same-origin" })
-
-      /**
-       * Modify url
-       */
-      const request1 = new Request(url, request0)
-
-      /**
-       * Do magic
-       */
-      event.respondWith(defetch(request1, hash))
-
-      /**
-       * Found
-       */
-      return
-    }
-  }
-
-  /**
-   * Not found
-   */
-  return
 }
