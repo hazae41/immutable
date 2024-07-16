@@ -40,14 +40,18 @@
     }
   },
   "keywords": [
-  "immutable",
-  "offline",
-  "cached",
-  "service-worker",
-  "serviceworker",
+    "immutable",
+    "offline",
+    "cached",
+    "service-worker",
+    "serviceworker",
     "typescript",
     "esmodules",
     "tested",
     "unit-tested"
-  ]
+  ],
+  "dependencies": {
+    "@hazae41/future": "^1.0.3",
+    "@hazae41/option": "^1.0.27"
+  }
 }

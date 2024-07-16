@@ -1,25 +1,4 @@
-export class InvalidSha256HashError extends Error {
-
-  constructor(
-    /**
-     * Resource
-     */
-    readonly resource: string,
-
-    /**
-     * Expected hash
-     */
-    readonly expected: string,
-
-    /**
-     * Received hash
-     */
-    readonly received: string
-  ) {
-    super(`Invalid SHA-256 hash for ${resource}. Expected ${expected} but received ${received}.`)
-  }
-
-}
+import { InvalidSha256HashError } from "./errors.js"
 
 declare const FILES_AND_HASHES: [string, string][] | undefined
 
