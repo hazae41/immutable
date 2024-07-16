@@ -28,19 +28,19 @@ export async function register(script: string | URL): Promise<Nullable<() => Pro
     if (installing == null)
       return
 
-    const currentHashRawHex = JsonLocalStorage.get("service_worker.current.hashRawHex")
-    const pendingHashRawHex = JsonLocalStorage.get("service_worker.pending.hashRawHex")
+    const currentVersion = JsonLocalStorage.get("service_worker.current.version")
+    const pendingVersion = JsonLocalStorage.get("service_worker.pending.version")
 
     installing.addEventListener("statechange", async () => {
       if (installing.state !== "installed")
         return
-      JsonLocalStorage.set("service_worker.pending.hashRawHex", undefined)
+      JsonLocalStorage.set("service_worker.pending.version", undefined)
     })
 
     /**
      * An update was pending and solicited
      */
-    if (pendingHashRawHex === currentHashRawHex)
+    if (pendingVersion === currentVersion)
       return
 
     console.warn(`Unsolicited service worker update detected`)
@@ -80,24 +80,24 @@ export async function register(script: string | URL): Promise<Nullable<() => Pro
   const latestScriptRes = await fetch(latestScriptUrl, { cache: "reload" })
 
   if (!latestScriptRes.ok)
-    throw new Error(`Failed to fetch latest service worker`)
+    throw new Error(`Failed to fetch latest service-worker`)
 
   const [basename, extension] = Path.filenames(latestScriptUrl.pathname)
 
   const latestHashBytes = new Uint8Array(await crypto.subtle.digest("SHA-256", await latestScriptRes.arrayBuffer()))
   const latestHashRawHex = Array.from(latestHashBytes).map(b => b.toString(16).padStart(2, "0")).join("")
+  const latestVersion = latestHashRawHex.slice(0, 6)
 
-  const currentHashRawHex = JsonLocalStorage.getOrSet("service_worker.current.hashRawHex", latestHashRawHex)
+  const currentVersion = JsonLocalStorage.getOrSet("service_worker.current.version", latestVersion)
+  const currentVersionScriptPath = `${basename}.${currentVersion}.h.${extension}`
+  const currentVersionScriptUrl = new URL(currentVersionScriptPath, latestScriptUrl)
 
-  const currentHashScriptPath = `${basename}.${currentHashRawHex}.h.${extension}`
-  const currentHashScriptUrl = new URL(currentHashScriptPath, latestScriptUrl)
-
-  await navigator.serviceWorker.register(currentHashScriptUrl, { updateViaCache: "all" })
+  await navigator.serviceWorker.register(currentVersionScriptUrl, { updateViaCache: "all" })
 
   /**
    * No update found
    */
-  if (currentHashRawHex === latestHashRawHex)
+  if (currentVersion === latestVersion)
     return
 
   return async () => {
@@ -111,16 +111,16 @@ export async function register(script: string | URL): Promise<Nullable<() => Pro
     if (active == null)
       return
 
-    const currentHashRawHex = JsonLocalStorage.get("service_worker.current.hashRawHex")
+    const currentVersion = JsonLocalStorage.get("service_worker.current.version")
 
     /**
      * Recheck to avoid concurrent updates
      */
-    if (currentHashRawHex === latestHashRawHex)
+    if (currentVersion === latestVersion)
       return
 
-    JsonLocalStorage.set("service_worker.current.hashRawHex", latestHashRawHex)
-    JsonLocalStorage.set("service_worker.pending.hashRawHex", latestHashRawHex)
+    JsonLocalStorage.set("service_worker.current.version", latestVersion)
+    JsonLocalStorage.set("service_worker.pending.version", latestVersion)
 
     const future = new Future<void>()
 
@@ -133,10 +133,10 @@ export async function register(script: string | URL): Promise<Nullable<() => Pro
     try {
       active.addEventListener("statechange", onStateChange, { passive: true })
 
-      const latestHashScriptPath = `${basename}.${latestHashRawHex}.h.${extension}`
-      const latestHashScriptUrl = new URL(latestHashScriptPath, latestScriptUrl)
+      const latestVersionScriptPath = `${basename}.${latestVersion}.h.${extension}`
+      const latestVersionScriptUrl = new URL(latestVersionScriptPath, latestScriptUrl)
 
-      await navigator.serviceWorker.register(latestHashScriptUrl, { updateViaCache: "all" })
+      await navigator.serviceWorker.register(latestVersionScriptUrl, { updateViaCache: "all" })
 
       /**
        * Wait for activation

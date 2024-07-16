@@ -27,7 +27,7 @@ export async function compile(wpconfig: any) {
   fs.copyFileSync(`./.webpack/${wpconfig.output.filename}`, `./public/${wpconfig.output.filename}`)
 }
 
-export async function compileAndHash(wpconfig: any) {
+export async function compileAndVersion(wpconfig: any) {
   Log.wait(`compiling ${wpconfig.name}...`)
 
   const start = Date.now()
@@ -47,9 +47,9 @@ export async function compileAndHash(wpconfig: any) {
   fs.copyFileSync(`./.webpack/${wpconfig.output.filename}`, `./public/${wpconfig.output.filename}`)
 
   const content = fs.readFileSync(`./.webpack/${wpconfig.output.filename}`)
-  const hash = crypto.createHash("sha256").update(content).digest("hex")
+  const version = crypto.createHash("sha256").update(content).digest("hex").slice(0, 6)
 
-  fs.copyFileSync(`./.webpack/${wpconfig.output.filename}`, `./public/${path.dirname(wpconfig.output.filename)}/${path.basename(wpconfig.output.filename, ".js")}.${hash}.h.js`)
+  fs.copyFileSync(`./.webpack/${wpconfig.output.filename}`, `./public/${path.dirname(wpconfig.output.filename)}/${path.basename(wpconfig.output.filename, ".js")}.${version}.h.js`)
 }
 
 export interface ImmutableConfig {
