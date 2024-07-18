@@ -24,11 +24,11 @@ New and smart engineering techniques. The extensive use of service-workers and n
 
 The most important thing about The Immutable Framework is that service-workers are immutably cached.
 
-This is done by using immutable `Cache-Control` headers and `{ updateViaCache: "all" }`.
+This is done by using immutable `Cache-Control` headers and `{ updateViaCache: "all" }` options.
 
-Once the service-worker is cached, the app cannot be automatically updated by the browser.
+Once the service-worker is cached, the webapp cannot be automatically updated by the browser.
 
-In order to update it, we just `register()` a new cache-busted service-worker.
+In order to update it, we need to `register()` a new service-worker at a different URL.
 
 This is done by generating a `service_worker.<hash>.h.js` for each version of your service-worker.
 
@@ -36,25 +36,33 @@ The app runtime fetches `service_worker.js` and check its hash in order to detec
 
 If an update is detected, it can `register()` the new `service_worker.<hash>.h.js` file.
 
-Thus the developer or user is in control of when to update the app (e.g. yes/no/always button).
+Thus the developer or user is in control of when to update the app (e.g. a yes/no/always button).
+
+If the service-worker is updated anyway by the browser (e.g. cache failure), the webapp errors.
 
 -
 
-The other great thing is that all other files are also immutably cached, by the service-worker.
+The other great thing is that all other files are also immutably cached by the service-worker.
 
 This is done just like `workbox` but with even more checks as the hashes are also verified.
 
+All files are hashed and verified using SHA-256 which is both strong and fast.
+
 -
 
-Your files are immutable and your service-worker verifies the hashes.
+The Immutable Framework also does things right to avoid server-side attacks at much as possible.
 
-This means you only have to trust the service-worker when you first download it.
+The bootpage is a special page that only contains glue code to register the service-worker.
 
-Users can manually hash the service-worker to verify it has no been compromised.
+You can manually hash the bootpage and the service-worker to verify they have not been tampered.
 
-(This can't be done automatically since there is no way of hashing a service-worker at runtime).
+And since the service-worker verifies the hashes of other files (pages, scripts, assets).
 
-If the service-worker hasn't been compromised the first time you downloaded it, you can trust the whole app, forever!
+That means you don't need to manually verify the hash of other files!
+
+So the the only way to compromise the webapp is when you first download it.
+
+Otherwise you can trust the whole app forever!
 
 ## Adapters
 
@@ -66,7 +74,7 @@ Or you can start a new one from the starter example webapp (TODO).
 
 ## Setup
 
-You just have to add this code in your service-worker.
+You just have to add this code to your service-worker.
 
 ### How it works?
 
