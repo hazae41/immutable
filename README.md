@@ -78,7 +78,7 @@ The service-worker will just override all `/<name>.html` with the content of `/_
 
 The bootpage will then reload itself, hitting into the service-worker cache, and display the true webpage.
 
-So it doesn't really matter which URL you visit the first time, as long as your served with the bootpage!
+So it doesn't really matter which URL you visit the first time, as long as you're served with the bootpage!
 
 -
 
