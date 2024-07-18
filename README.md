@@ -52,7 +52,7 @@ All files are hashed and verified using SHA-256 which is both strong and fast.
 
 The Immutable Framework also does things right to avoid server-side attacks at much as possible.
 
-The bootpage is a special page that only contains glue code to register the service-worker.
+The bootpage is a special webpage that only contains glue code to register the service-worker.
 
 You can manually hash the bootpage and the service-worker to verify they have not been tampered.
 
@@ -63,6 +63,22 @@ That means you don't need to manually verify the hash of other files!
 So the the only way to compromise the webapp is when you first download it.
 
 Otherwise you can trust the whole webapp forever unless you update it!
+
+-
+
+For it to work fine each webpage is replaced by the bootpage.
+
+Let's suppose you want to visit `/posts.html`.
+
+You will be served with the bootpage.
+
+The true webpage is buried in a path like `/_posts.html`.
+
+The service-worker will just override all `/<name>.html` with the content of `/_<name>.html` in its cache.
+
+The bootpage will then reload itself, hitting into the service-worker cache, and display the true webpage.
+
+So it doesn't really matter which URL you visit the first time, as long as your served with the bootpage!
 
 -
 
