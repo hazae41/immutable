@@ -1,3 +1,3 @@
-export * as Cache from "./cache/index.js";
-export * as Sticky from "./sticky/index.js";
+export * from "./cache/index.js";
+export * from "./sticky/index.js";
 
