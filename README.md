@@ -30,11 +30,11 @@ Once the service-worker is cached, the webapp cannot be automatically updated by
 
 In order to update it, we need to `register()` a new service-worker at a different URL.
 
-This is done by generating a `service_worker.<hash>.h.js` for each version of your service-worker.
+This is done by generating a `service_worker.<version>.js` for each version of your service-worker.
 
-The webapp runtime fetches `service_worker.js` and check its hash in order to detect updates.
+The webapp runtime fetches `service_worker.latest.js` and check its hash in order to detect updates.
 
-If an update is detected, it can `register()` the new `service_worker.<hash>.h.js` file.
+If an update is detected, it can `register()` the new `service_worker.<version>.js` file.
 
 Thus the developer or user is in control of when to update the webapp (e.g. a yes/no/always button).
 
@@ -118,7 +118,7 @@ This code will cache the `./out` directory except files starting with `service_w
 
 Feel free to modify the code to achieve your own caching policy.
 
-Just avoid caching the service-worker itself (`service_worker.<version>.h.js`) as it will compute its own hash.
+Just avoid caching the service-worker itself (`service_worker.<version>.js`) as it will compute its own hash.
 
 And since it's the hash before postprocessing, it will fail the runtime check.
 
@@ -126,11 +126,16 @@ And since it's the hash before postprocessing, it will fail the runtime check.
 import { Immutable } from "@hazae41/immutable"
 
 /**
+ * Declare global macro
+ */
+declare function $raw$<T>(script: string): T
+
+/**
  * Only cache on production
  */
 if (process.env.NODE_ENV === "production") {
   /**
-   * Use $raw$ to avoid minifiers from touching the code
+   * Use $raw$ to avoid minifiers from mangling the code
    */
   const files = $raw$<[string, string][]>(`$run$(async () => {
     const fs = await import("fs")
@@ -152,9 +157,18 @@ if (process.env.NODE_ENV === "production") {
     const files = new Array()
   
     for (const absolute of walkSync("./out")) {
-      const name = path.basename(absolute)
+      const filename = path.basename(absolute)
   
-      if (name.startsWith("service_worker."))
+      /**
+       * Do not cache service-workers
+       */
+      if (filename.startsWith("service_worker."))
+        continue
+
+      /**
+       * Do not cache bootpages
+       */
+      if (filename.endsWith(".html") && !filename.startsWith("_"))
         continue
   
       const text = fs.readFileSync(absolute)
