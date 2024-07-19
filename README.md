@@ -143,7 +143,7 @@ if (process.env.NODE_ENV === "production") {
     const crypto = await import("crypto")
   
     function* walkSync(dir) {
-      const files = fs.readdirSync(dir, { withFileTypes: true })
+      const files = fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name > b.name ? 1 : -1)
   
       for (const file of files) {
         if (file.isDirectory()) {
@@ -159,6 +159,12 @@ if (process.env.NODE_ENV === "production") {
     for (const absolute of walkSync("./out")) {
       const filename = path.basename(absolute)
   
+      /**
+       * Do not cache saumon files
+       */
+      if (filename.endsWith(".saumon.js"))
+        continue
+      
       /**
        * Do not cache service-workers
        */
