@@ -96,6 +96,9 @@ export class Cache {
 
     const url = new URL(event.request.url)
 
+    /**
+     * Remove trailing slash
+     */
     if (url.pathname.endsWith("/"))
       url.pathname = url.pathname.slice(0, -1)
 
