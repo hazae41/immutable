@@ -82,20 +82,6 @@ export class Cache {
 
     cache.put(request, cleaned.clone())
 
-    const url = new URL(request.url)
-
-    const [dirname, filename] = Path.pathnames(url.pathname)
-
-    if (filename.endsWith(".html") && filename.startsWith("_")) {
-      const url2 = new URL(url)
-
-      url2.pathname = `${dirname}/${filename.slice(1)}`
-
-      const request2 = new Request(url2, request)
-
-      cache.put(request2, cleaned.clone())
-    }
-
     return cleaned
   }
 
@@ -127,17 +113,19 @@ export class Cache {
       return
     }
 
+    const [dirname, filename] = Path.dirname(url.pathname)
+
     /**
      * Not a directory
      */
-    if (url.pathname.split("/").at(-1)!.includes("."))
+    if (filename.includes("."))
       /**
        * Not found
        */
       return
 
     /**
-     * Match .html
+     * Match <pathname>.html
      */
     {
       const url = new URL(event.request.url)
@@ -170,12 +158,80 @@ export class Cache {
     }
 
     /**
-     * Match /index.html
+     * Match <pathname>/index.html
      */
     {
       const url = new URL(event.request.url)
 
       url.pathname += "/index.html"
+
+      const hash = this.files.get(url.pathname)
+
+      if (hash != null) {
+
+        /**
+         * Modify mode
+         */
+        const request0 = new Request(event.request, { mode: "same-origin" })
+
+        /**
+         * Modify url
+         */
+        const request1 = new Request(url, request0)
+
+        /**
+         * Do magic
+         */
+        event.respondWith(this.defetch(request1, hash))
+
+        /**
+         * Found
+         */
+        return
+      }
+    }
+
+    /**
+     * Match <pathname>/_index.html
+     */
+    {
+      const url = new URL(event.request.url)
+
+      url.pathname += "/_index.html"
+
+      const hash = this.files.get(url.pathname)
+
+      if (hash != null) {
+
+        /**
+         * Modify mode
+         */
+        const request0 = new Request(event.request, { mode: "same-origin" })
+
+        /**
+         * Modify url
+         */
+        const request1 = new Request(url, request0)
+
+        /**
+         * Do magic
+         */
+        event.respondWith(this.defetch(request1, hash))
+
+        /**
+         * Found
+         */
+        return
+      }
+    }
+
+    /**
+     * Match <dirname>/_<filename>.html
+     */
+    {
+      const url = new URL(event.request.url)
+
+      url.pathname = `${dirname}/_${filename}.html`
 
       const hash = this.files.get(url.pathname)
 
