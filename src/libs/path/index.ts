@@ -6,10 +6,10 @@ export namespace Path {
    * @returns 
    */
   export function pathnames(path: string) {
-    const splitted = path.split("/")
+    const slashes = path.split("/")
 
-    const dirname = splitted.slice(0, -1).join("/") || "."
-    const filename = splitted.at(-1) || dirname
+    const dirname = slashes.slice(0, -1).join("/") || "."
+    const filename = slashes.at(-1) || dirname
 
     return [dirname, filename]
   }
@@ -38,10 +38,10 @@ export namespace Path {
    * @returns 
    */
   export function filenames(path: string) {
-    const splitted = filename(path).split(".")
+    const dots = filename(path).split(".")
 
-    const basename = splitted.slice(0, 1).join(".") || ""
-    const extension = splitted.at(1) || ""
+    const basename = dots.slice(0, 1).join(".") || ""
+    const extension = dots.at(1) || ""
 
     return [basename, extension]
   }
