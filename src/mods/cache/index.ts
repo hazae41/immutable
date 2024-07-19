@@ -94,10 +94,10 @@ export class Cache {
     if (process.env.NODE_ENV === "development")
       return
 
-    /**
-     * Match exact
-     */
     const url = new URL(event.request.url)
+
+    if (url.pathname.endsWith("/"))
+      url.pathname = url.pathname.slice(0, -1)
 
     const hash = this.files.get(url.pathname)
 
@@ -116,7 +116,7 @@ export class Cache {
     const [dirname, filename] = Path.dirname(url.pathname)
 
     /**
-     * Not a directory
+     * Probably not a directory
      */
     if (filename.includes("."))
       /**
@@ -125,16 +125,17 @@ export class Cache {
       return
 
     /**
-     * Match <pathname>.html
+     * Match /index.html
      */
-    {
-      const url = new URL(event.request.url)
+    if (url.pathname === "/") {
+      const url2 = new URL(event.request.url)
 
-      url.pathname += ".html"
+      url2.pathname = "/index.html"
 
-      const hash = this.files.get(url.pathname)
+      const hash = this.files.get(url2.pathname)
 
       if (hash != null) {
+
         /**
          * Modify mode
          */
@@ -143,7 +144,7 @@ export class Cache {
         /**
          * Modify url
          */
-        const request1 = new Request(url, request0)
+        const request1 = new Request(url2, request0)
 
         /**
          * Do magic
@@ -160,12 +161,12 @@ export class Cache {
     /**
      * Match <pathname>/index.html
      */
-    {
-      const url = new URL(event.request.url)
+    if (url.pathname !== "/") {
+      const url2 = new URL(event.request.url)
 
-      url.pathname += "/index.html"
+      url2.pathname += "/index.html"
 
-      const hash = this.files.get(url.pathname)
+      const hash = this.files.get(url2.pathname)
 
       if (hash != null) {
 
@@ -177,7 +178,7 @@ export class Cache {
         /**
          * Modify url
          */
-        const request1 = new Request(url, request0)
+        const request1 = new Request(url2, request0)
 
         /**
          * Do magic
@@ -194,12 +195,12 @@ export class Cache {
     /**
      * Match <pathname>/_index.html
      */
-    {
-      const url = new URL(event.request.url)
+    if (url.pathname !== "/") {
+      const url2 = new URL(event.request.url)
 
-      url.pathname += "/_index.html"
+      url2.pathname += "/_index.html"
 
-      const hash = this.files.get(url.pathname)
+      const hash = this.files.get(url2.pathname)
 
       if (hash != null) {
 
@@ -211,7 +212,40 @@ export class Cache {
         /**
          * Modify url
          */
-        const request1 = new Request(url, request0)
+        const request1 = new Request(url2, request0)
+
+        /**
+         * Do magic
+         */
+        event.respondWith(this.defetch(request1, hash))
+
+        /**
+         * Found
+         */
+        return
+      }
+    }
+
+    /**
+     * Match <pathname>.html
+     */
+    if (url.pathname !== "/") {
+      const url2 = new URL(event.request.url)
+
+      url2.pathname += ".html"
+
+      const hash = this.files.get(url2.pathname)
+
+      if (hash != null) {
+        /**
+         * Modify mode
+         */
+        const request0 = new Request(event.request, { mode: "same-origin" })
+
+        /**
+         * Modify url
+         */
+        const request1 = new Request(url2, request0)
 
         /**
          * Do magic
@@ -229,11 +263,11 @@ export class Cache {
      * Match <dirname>/_<filename>.html
      */
     {
-      const url = new URL(event.request.url)
+      const url2 = new URL(event.request.url)
 
-      url.pathname = `${dirname}/_${filename}.html`
+      url2.pathname = `${dirname}/_${filename}.html`
 
-      const hash = this.files.get(url.pathname)
+      const hash = this.files.get(url2.pathname)
 
       if (hash != null) {
 
@@ -245,7 +279,7 @@ export class Cache {
         /**
          * Modify url
          */
-        const request1 = new Request(url, request0)
+        const request1 = new Request(url2, request0)
 
         /**
          * Do magic
