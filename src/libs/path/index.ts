@@ -9,7 +9,7 @@ export namespace Path {
     const slashes = path.split("/")
 
     const dirname = slashes.slice(0, -1).join("/") || "."
-    const filename = slashes.at(-1)!
+    const filename = slashes.at(-1) || ""
 
     return [dirname, filename]
   }
