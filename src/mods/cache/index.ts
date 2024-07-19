@@ -119,15 +119,6 @@ export class Cache {
     const [dirname, filename] = Path.pathnames(url.pathname)
 
     /**
-     * Probably not a directory
-     */
-    if (filename.includes("."))
-      /**
-       * Not found
-       */
-      return
-
-    /**
      * Match /index.html
      */
     if (url.pathname === "/") {
