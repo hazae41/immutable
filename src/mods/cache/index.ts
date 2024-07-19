@@ -1,37 +1,5 @@
+import { Path } from "libs/path/index.js"
 import { InvalidSha256HashError } from "./errors.js"
-
-export function $compute$(directory: string) {
-  return `$run$(async () => {
-    const fs = await import("fs")
-    const path = await import("path")
-    const crypto = await import("crypto")
-  
-    function* walkSync(dir) {
-      const files = fs.readdirSync(dir, { withFileTypes: true })
-  
-      for (const file of files) {
-        if (file.isDirectory()) {
-          yield* walkSync(path.join(dir, file.name))
-        } else {
-          yield path.join(dir, file.name)
-        }
-      }
-    }
-  
-    const filesAndHashes = new Array()
-  
-    for (const absolute of walkSync("${directory}")) {
-      const text = fs.readFileSync(absolute)
-      const hash = crypto.createHash("sha256").update(text).digest("hex")
-  
-      const relative = path.relative("${directory}", absolute)
-  
-      filesAndHashes.push([\`/\${relative}\`, hash])
-    }
-  
-    return filesAndHashes
-  }, { space: 0 })`
-}
 
 export class Cache {
 
@@ -113,6 +81,20 @@ export class Cache {
       throw new InvalidSha256HashError(request.url, expected, received)
 
     cache.put(request, cleaned.clone())
+
+    const url = new URL(request.url)
+
+    const [dirname, filename] = Path.pathnames(url.pathname)
+
+    if (filename.endsWith(".html") && filename.startsWith("_")) {
+      const url2 = new URL(url)
+
+      url2.pathname = `${dirname}/${filename.slice(1)}`
+
+      const request2 = new Request(url2, request)
+
+      cache.put(request2, cleaned.clone())
+    }
 
     return cleaned
   }

@@ -8,8 +8,8 @@ export namespace Path {
   export function pathnames(path: string) {
     const splitted = path.split("/")
 
-    const dirname = splitted.slice(0, -1).join("/")
-    const filename = splitted.at(-1)!
+    const dirname = splitted.slice(0, -1).join("/") || "."
+    const filename = splitted.at(-1) || dirname
 
     return [dirname, filename]
   }
@@ -40,8 +40,8 @@ export namespace Path {
   export function filenames(path: string) {
     const splitted = filename(path).split(".")
 
-    const basename = splitted.slice(0, 1).join(".")
-    const extension = splitted.at(-1)!
+    const basename = splitted.slice(0, 1).join(".") || ""
+    const extension = splitted.at(1) || ""
 
     return [basename, extension]
   }
