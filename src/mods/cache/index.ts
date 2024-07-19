@@ -59,18 +59,92 @@ export class Cache {
     /**
      * Fetch but skip cache-control
      */
-    const fetched = await fetch(request, { cache: "reload" })
+    let fetched = await fetch(request, { cache: "reload" })
 
     /**
      * Remove junk properties e.g. redirected
      */
-    const cleaned = new Response(fetched.body, fetched)
+    let cleaned = new Response(fetched.body, fetched)
 
     /**
-     * Errors are not verified nor cached
+     * Try to fetch similar URLs
      */
-    if (!cleaned.ok)
-      return cleaned
+    if (!cleaned.ok) {
+      const url = new URL(request.url)
+
+      /**
+       * Match <pathname>/index.html
+       */
+      if (url.pathname.endsWith("/index.html")) {
+        const url2 = new URL(request.url)
+
+        /**
+         * Remove /index.html
+         */
+        url2.pathname = Path.dirname(url.pathname)
+
+        const request2 = new Request(url2, request)
+
+        const fetched2 = await fetch(request2, { cache: "reload" })
+
+        const cleaned2 = new Response(fetched2.body, fetched2)
+
+        if (!cleaned2.ok)
+          /**
+           * Return original error
+           */
+          return cleaned
+
+        fetched = fetched2
+        cleaned = cleaned2
+
+        /**
+         * Continue
+         */
+      }
+
+      /**
+       * Match <pathname>.html
+       */
+      else if (url.pathname.endsWith(".html")) {
+        const url2 = new URL(request.url)
+
+        /**
+         * Remove .html
+         */
+        url2.pathname = url.pathname.slice(0, -5)
+
+        const request2 = new Request(url2, request)
+
+        const fetched2 = await fetch(request2, { cache: "reload" })
+
+        const cleaned2 = new Response(fetched2.body, fetched2)
+
+        if (!cleaned2.ok)
+          /**
+           * Return original error
+           */
+          return cleaned
+
+        fetched = fetched2
+        cleaned = cleaned2
+
+        /**
+         * Continue
+         */
+      }
+
+      else {
+        /**
+         * Not found
+         */
+        return cleaned
+      }
+
+      /**
+       * Continue
+       */
+    }
 
     const hashBytes = new Uint8Array(await crypto.subtle.digest("SHA-256", await cleaned.clone().arrayBuffer()))
     const hashRawHex = Array.from(hashBytes).map(b => b.toString(16).padStart(2, "0")).join("")
