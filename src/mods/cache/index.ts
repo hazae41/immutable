@@ -116,7 +116,7 @@ export class Cache {
       return
     }
 
-    const [dirname, filename] = Path.dirname(url.pathname)
+    const [dirname, filename] = Path.pathnames(url.pathname)
 
     /**
      * Probably not a directory
@@ -265,7 +265,7 @@ export class Cache {
     /**
      * Match <dirname>/_<filename>.html
      */
-    {
+    if (url.pathname !== "/") {
       const url2 = new URL(event.request.url)
 
       url2.pathname = `${dirname}/_${filename}.html`
