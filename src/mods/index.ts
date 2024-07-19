@@ -1,3 +1,3 @@
 export * from "./cache/index.js";
-export * from "./sticky/index.js";
+export * from "./service_worker/index.js";
 

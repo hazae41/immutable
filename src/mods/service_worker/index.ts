@@ -82,14 +82,14 @@ export async function register(script: string | URL): Promise<Nullable<() => Pro
   if (!latestScriptRes.ok)
     throw new Error(`Failed to fetch latest service-worker`)
 
-  const [basename, extension] = Path.filenames(latestScriptUrl.pathname)
+  const [basename] = Path.filename(latestScriptUrl.pathname).split(".")
 
   const latestHashBytes = new Uint8Array(await crypto.subtle.digest("SHA-256", await latestScriptRes.arrayBuffer()))
   const latestHashRawHex = Array.from(latestHashBytes).map(b => b.toString(16).padStart(2, "0")).join("")
   const latestVersion = latestHashRawHex.slice(0, 6)
 
   const currentVersion = JsonLocalStorage.getOrSet("service_worker.current.version", latestVersion)
-  const currentVersionScriptPath = `${basename}.${currentVersion}.h.${extension}`
+  const currentVersionScriptPath = `${basename}.${currentVersion}.js`
   const currentVersionScriptUrl = new URL(currentVersionScriptPath, latestScriptUrl)
 
   await navigator.serviceWorker.register(currentVersionScriptUrl, { updateViaCache: "all" })
@@ -133,7 +133,7 @@ export async function register(script: string | URL): Promise<Nullable<() => Pro
     try {
       active.addEventListener("statechange", onStateChange, { passive: true })
 
-      const latestVersionScriptPath = `${basename}.${latestVersion}.h.${extension}`
+      const latestVersionScriptPath = `${basename}.${latestVersion}.js`
       const latestVersionScriptUrl = new URL(latestVersionScriptPath, latestScriptUrl)
 
       await navigator.serviceWorker.register(latestVersionScriptUrl, { updateViaCache: "all" })
