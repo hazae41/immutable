@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "@hazae41/immutable",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Create immutable webapps",
   "homepage": "https://github.com/hazae41/immutable",
   "repository": "github:hazae41/immutable",
