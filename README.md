@@ -103,3 +103,9 @@ Or you can start a new one from the starter example webapp (TODO).
 ## Setup
 
 Use the `README` from each adapter to find complete instructions
+
+## Examples
+
+Here is a list of immutable webapps
+
+- https://dstorage.hazae41.me/v0 / https://github.com/hazae41/dstorage

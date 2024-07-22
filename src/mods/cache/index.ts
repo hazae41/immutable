@@ -59,24 +59,26 @@ export class Cache {
     /**
      * Fetch but skip cache-control
      */
-    let fetched = await fetch(request, { cache: "reload" })
+    const fetched = await fetch(request, { cache: "reload" })
 
     /**
      * Remove junk properties e.g. redirected
      */
-    let cleaned = new Response(fetched.body, fetched)
+    const cleaned = new Response(fetched.body, fetched)
+
+    let response = cleaned
 
     /**
      * Try to fetch similar URLs
      */
-    if (!cleaned.ok) {
+    if (!response.ok) {
       const url = new URL(request.url)
 
       /**
        * Match <pathname>/index.html
        */
       if (url.pathname.endsWith("/index.html")) {
-        const url2 = new URL(request.url)
+        const url2 = new URL(url)
 
         /**
          * Remove /index.html
@@ -93,10 +95,9 @@ export class Cache {
           /**
            * Return original error
            */
-          return cleaned
+          return response
 
-        fetched = fetched2
-        cleaned = cleaned2
+        response = cleaned2
 
         /**
          * Continue
@@ -107,7 +108,7 @@ export class Cache {
        * Match <pathname>.html
        */
       else if (url.pathname.endsWith(".html")) {
-        const url2 = new URL(request.url)
+        const url2 = new URL(url)
 
         /**
          * Remove .html
@@ -124,10 +125,9 @@ export class Cache {
           /**
            * Return original error
            */
-          return cleaned
+          return response
 
-        fetched = fetched2
-        cleaned = cleaned2
+        response = cleaned2
 
         /**
          * Continue
@@ -138,7 +138,7 @@ export class Cache {
         /**
          * Not found
          */
-        return cleaned
+        return response
       }
 
       /**
@@ -146,7 +146,7 @@ export class Cache {
        */
     }
 
-    const hashBytes = new Uint8Array(await crypto.subtle.digest("SHA-256", await cleaned.clone().arrayBuffer()))
+    const hashBytes = new Uint8Array(await crypto.subtle.digest("SHA-256", await response.clone().arrayBuffer()))
     const hashRawHex = Array.from(hashBytes).map(b => b.toString(16).padStart(2, "0")).join("")
 
     const received = hashRawHex
@@ -154,9 +154,9 @@ export class Cache {
     if (received !== expected)
       throw new InvalidSha256HashError(request.url, expected, received)
 
-    cache.put(request, cleaned.clone())
+    cache.put(request, response.clone())
 
-    return cleaned
+    return response
   }
 
   /**
@@ -170,9 +170,6 @@ export class Cache {
 
     const url = new URL(event.request.url)
 
-    /**
-     * Remove trailing slash
-     */
     if (url.pathname.endsWith("/"))
       url.pathname = url.pathname.slice(0, -1)
 
@@ -196,14 +193,13 @@ export class Cache {
      * Match /index.html
      */
     if (url.pathname === "/") {
-      const url2 = new URL(event.request.url)
+      const url2 = new URL(url)
 
       url2.pathname = "/index.html"
 
       const hash = this.files.get(url2.pathname)
 
       if (hash != null) {
-
         /**
          * Modify mode
          */
@@ -230,7 +226,7 @@ export class Cache {
      * Match <pathname>/index.html
      */
     if (url.pathname !== "/") {
-      const url2 = new URL(event.request.url)
+      const url2 = new URL(url)
 
       url2.pathname += "/index.html"
 
@@ -264,7 +260,7 @@ export class Cache {
      * Match <pathname>/_index.html
      */
     if (url.pathname !== "/") {
-      const url2 = new URL(event.request.url)
+      const url2 = new URL(url)
 
       url2.pathname += "/_index.html"
 
@@ -298,7 +294,7 @@ export class Cache {
      * Match <pathname>.html
      */
     if (url.pathname !== "/") {
-      const url2 = new URL(event.request.url)
+      const url2 = new URL(url)
 
       url2.pathname += ".html"
 
@@ -331,7 +327,7 @@ export class Cache {
      * Match <dirname>/_<filename>.html
      */
     if (url.pathname !== "/") {
-      const url2 = new URL(event.request.url)
+      const url2 = new URL(url)
 
       url2.pathname = `${dirname}/_${filename}.html`
 
