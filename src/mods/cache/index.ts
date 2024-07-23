@@ -11,7 +11,7 @@ export class Cache {
    * Uncache all files
    */
   async uncache() {
-    await caches.delete("meta")
+    await caches.delete("#files")
   }
 
   /**
@@ -37,7 +37,7 @@ export class Cache {
    * @returns 
    */
   async defetch(request: Request, expected: string) {
-    const cache = await caches.open("meta")
+    const cache = await caches.open("#files")
 
     /**
      * Check cache if possible
