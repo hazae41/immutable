@@ -87,6 +87,29 @@ export async function register(script: string | URL, params: RegisterParams = {}
   const [basename] = Path.filename(latestScriptUrl.pathname).split(".")
 
   const currentVersion = JsonLocalStorage.get("service_worker.current.version")
+
+  if (currentVersion == null) {
+    const latestScriptRes = await fetch(latestScriptUrl, { cache: "reload" })
+
+    if (!latestScriptRes.ok)
+      throw new Error(`Failed to fetch latest service-worker`)
+    if (latestScriptRes.headers.get("cache-control") !== "public, max-age=31536000, immutable")
+      throw new Error(`Wrong Cache-Control header for latest service-worker`)
+
+    const latestHashBytes = new Uint8Array(await crypto.subtle.digest("SHA-256", await latestScriptRes.arrayBuffer()))
+    const latestHashRawHex = Array.from(latestHashBytes).map(b => b.toString(16).padStart(2, "0")).join("")
+    const latestVersion = latestHashRawHex.slice(0, 6)
+
+    const latestVersionScriptPath = `${basename}.${latestVersion}.js`
+    const latestVersionScriptUrl = new URL(latestVersionScriptPath, latestScriptUrl)
+
+    JsonLocalStorage.set("service_worker.current.version", latestVersion)
+
+    await navigator.serviceWorker.register(latestVersionScriptUrl, { updateViaCache: "all" })
+
+    return
+  }
+
   const currentVersionScriptPath = `${basename}.${currentVersion}.js`
   const currentVersionScriptUrl = new URL(currentVersionScriptPath, latestScriptUrl)
 
