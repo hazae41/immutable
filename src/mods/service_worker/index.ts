@@ -12,7 +12,7 @@ export interface RegisterParams {
  * @param script 
  * @returns 
  */
-export async function register(script: string | URL, params: RegisterParams): Promise<Nullable<() => Promise<void>>> {
+export async function register(script: string | URL, params: RegisterParams = {}): Promise<Nullable<() => Promise<void>>> {
   const { shouldCheckUpdates = true } = params
 
   const bricked = JsonLocalStorage.get("service_worker.bricked")
