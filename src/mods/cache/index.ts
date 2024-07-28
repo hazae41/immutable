@@ -223,6 +223,39 @@ export class Cache {
     }
 
     /**
+     * Match /_index.html
+     */
+    if (url.pathname === "/") {
+      const url2 = new URL(url)
+
+      url2.pathname = "/_index.html"
+
+      const hash = this.files.get(url2.pathname)
+
+      if (hash != null) {
+        /**
+         * Modify mode
+         */
+        const request0 = new Request(event.request, { mode: "same-origin" })
+
+        /**
+         * Modify url
+         */
+        const request1 = new Request(url2, request0)
+
+        /**
+         * Do magic
+         */
+        event.respondWith(this.defetch(request1, hash))
+
+        /**
+         * Found
+         */
+        return
+      }
+    }
+
+    /**
      * Match <pathname>.html
      */
     if (url.pathname !== "/") {

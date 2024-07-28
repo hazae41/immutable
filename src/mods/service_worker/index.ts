@@ -81,6 +81,8 @@ export async function register(script: string | URL): Promise<Nullable<() => Pro
 
   if (!latestScriptRes.ok)
     throw new Error(`Failed to fetch latest service-worker`)
+  if (latestScriptRes.headers.get("cache-control") !== "public, max-age=31536000, immutable")
+    throw new Error(`Wrong Cache-Control header for latest service-worker`)
 
   const [basename] = Path.filename(latestScriptUrl.pathname).split(".")
 
