@@ -3,20 +3,20 @@ import { Nullable } from "@hazae41/option"
 import { Path } from "libs/path/index.js"
 import { JsonLocalStorage } from "libs/storage/index.js"
 
-export interface RegisterParams {
+export interface ImmutableRegistrationOptions {
   readonly shouldCheckUpdates?: boolean
 }
 
 /**
  * Register a sticky service-worker and return a function to update it
- * @param latestScriptPathOrUrl 
+ * @param latestScriptRawUrl 
  * @returns 
  */
-export async function register(latestScriptPathOrUrl: string | URL, params: RegisterParams = {}): Promise<Nullable<() => Promise<void>>> {
-  const { shouldCheckUpdates = true } = params
+export async function register(latestScriptRawUrl: string | URL, options: ImmutableRegistrationOptions = {}): Promise<Nullable<() => Promise<void>>> {
+  const { shouldCheckUpdates = true } = options
 
   if (process.env.NODE_ENV === "development") {
-    const latestScriptUrl = new URL(latestScriptPathOrUrl, location.href)
+    const latestScriptUrl = new URL(latestScriptRawUrl, location.href)
 
     await navigator.serviceWorker.register(latestScriptUrl, { updateViaCache: "none" })
 
@@ -93,7 +93,7 @@ export async function register(latestScriptPathOrUrl: string | URL, params: Regi
   const currentVersion = JsonLocalStorage.get("service_worker.current.version")
 
   if (currentVersion == null) {
-    const latestScriptUrl = new URL(latestScriptPathOrUrl, location.href)
+    const latestScriptUrl = new URL(latestScriptRawUrl, location.href)
     const latestScriptBasename = Path.filename(latestScriptUrl.pathname).split(".")[0]
 
     const latestScriptRes = await fetch(latestScriptUrl, { cache: "reload" })
@@ -117,7 +117,7 @@ export async function register(latestScriptPathOrUrl: string | URL, params: Regi
     return
   }
 
-  const latestScriptUrl = new URL(latestScriptPathOrUrl, location.href)
+  const latestScriptUrl = new URL(latestScriptRawUrl, location.href)
   const latestScriptBasename = Path.filename(latestScriptUrl.pathname).split(".")[0]
 
   const currentVersionScriptPath = `${latestScriptBasename}.${currentVersion}.js`
