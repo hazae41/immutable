@@ -15,11 +15,8 @@ export interface ImmutableRegistrationOptions {
 export async function register(latestScriptRawUrl: string | URL, options: ImmutableRegistrationOptions = {}): Promise<Nullable<() => Promise<void>>> {
   const { shouldCheckUpdates = true } = options
 
-  if (process.env.NODE_ENV === "development") {
-    const latestScriptUrl = new URL(latestScriptRawUrl, location.href)
-
-    await navigator.serviceWorker.register(latestScriptUrl, { updateViaCache: "none" })
-
+  if (process.env.NODE_ENV !== "production") {
+    await navigator.serviceWorker.register(latestScriptRawUrl, { updateViaCache: "none" })
     return
   }
 
