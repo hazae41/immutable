@@ -15,6 +15,13 @@ export interface RegisterParams {
 export async function register(script: string | URL, params: RegisterParams = {}): Promise<Nullable<() => Promise<void>>> {
   const { shouldCheckUpdates = true } = params
 
+  const latestScriptUrl = new URL(script, location.href)
+
+  if (process.env.NODE_ENV === "development") {
+    await navigator.serviceWorker.register(latestScriptUrl, { updateViaCache: "none" })
+    return
+  }
+
   const bricked = JsonLocalStorage.get("service_worker.bricked")
 
   if (bricked)
@@ -82,10 +89,6 @@ export async function register(script: string | URL, params: RegisterParams = {}
     return
   })
 
-  const latestScriptUrl = new URL(script, location.href)
-
-  const [basename] = Path.filename(latestScriptUrl.pathname).split(".")
-
   const currentVersion = JsonLocalStorage.get("service_worker.current.version")
 
   if (currentVersion == null) {
@@ -100,6 +103,8 @@ export async function register(script: string | URL, params: RegisterParams = {}
     const latestHashRawHex = Array.from(latestHashBytes).map(b => b.toString(16).padStart(2, "0")).join("")
     const latestVersion = latestHashRawHex.slice(0, 6)
 
+    const [basename] = Path.filename(latestScriptUrl.pathname).split(".")
+
     const latestVersionScriptPath = `${basename}.${latestVersion}.js`
     const latestVersionScriptUrl = new URL(latestVersionScriptPath, latestScriptUrl)
 
@@ -109,6 +114,8 @@ export async function register(script: string | URL, params: RegisterParams = {}
 
     return
   }
+
+  const [basename] = Path.filename(latestScriptUrl.pathname).split(".")
 
   const currentVersionScriptPath = `${basename}.${currentVersion}.js`
   const currentVersionScriptUrl = new URL(currentVersionScriptPath, latestScriptUrl)
@@ -165,6 +172,8 @@ export async function register(script: string | URL, params: RegisterParams = {}
 
       try {
         active.addEventListener("statechange", onStateChange, { passive: true })
+
+        const [basename] = Path.filename(latestScriptUrl.pathname).split(".")
 
         const latestVersionScriptPath = `${basename}.${latestVersion}.js`
         const latestVersionScriptUrl = new URL(latestVersionScriptPath, latestScriptUrl)
