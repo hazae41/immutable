@@ -9,16 +9,17 @@ export interface RegisterParams {
 
 /**
  * Register a sticky service-worker and return a function to update it
- * @param script 
+ * @param latestScriptPathOrUrl 
  * @returns 
  */
-export async function register(script: string | URL, params: RegisterParams = {}): Promise<Nullable<() => Promise<void>>> {
+export async function register(latestScriptPathOrUrl: string | URL, params: RegisterParams = {}): Promise<Nullable<() => Promise<void>>> {
   const { shouldCheckUpdates = true } = params
 
-  const latestScriptUrl = new URL(script, location.href)
-
   if (process.env.NODE_ENV === "development") {
+    const latestScriptUrl = new URL(latestScriptPathOrUrl, location.href)
+
     await navigator.serviceWorker.register(latestScriptUrl, { updateViaCache: "none" })
+
     return
   }
 
@@ -92,6 +93,9 @@ export async function register(script: string | URL, params: RegisterParams = {}
   const currentVersion = JsonLocalStorage.get("service_worker.current.version")
 
   if (currentVersion == null) {
+    const latestScriptUrl = new URL(latestScriptPathOrUrl, location.href)
+    const latestScriptBasename = Path.filename(latestScriptUrl.pathname).split(".")[0]
+
     const latestScriptRes = await fetch(latestScriptUrl, { cache: "reload" })
 
     if (!latestScriptRes.ok)
@@ -103,9 +107,7 @@ export async function register(script: string | URL, params: RegisterParams = {}
     const latestHashRawHex = Array.from(latestHashBytes).map(b => b.toString(16).padStart(2, "0")).join("")
     const latestVersion = latestHashRawHex.slice(0, 6)
 
-    const [basename] = Path.filename(latestScriptUrl.pathname).split(".")
-
-    const latestVersionScriptPath = `${basename}.${latestVersion}.js`
+    const latestVersionScriptPath = `${latestScriptBasename}.${latestVersion}.js`
     const latestVersionScriptUrl = new URL(latestVersionScriptPath, latestScriptUrl)
 
     JsonLocalStorage.set("service_worker.current.version", latestVersion)
@@ -115,9 +117,10 @@ export async function register(script: string | URL, params: RegisterParams = {}
     return
   }
 
-  const [basename] = Path.filename(latestScriptUrl.pathname).split(".")
+  const latestScriptUrl = new URL(latestScriptPathOrUrl, location.href)
+  const latestScriptBasename = Path.filename(latestScriptUrl.pathname).split(".")[0]
 
-  const currentVersionScriptPath = `${basename}.${currentVersion}.js`
+  const currentVersionScriptPath = `${latestScriptBasename}.${currentVersion}.js`
   const currentVersionScriptUrl = new URL(currentVersionScriptPath, latestScriptUrl)
 
   await navigator.serviceWorker.register(currentVersionScriptUrl, { updateViaCache: "all" })
@@ -173,9 +176,7 @@ export async function register(script: string | URL, params: RegisterParams = {}
       try {
         active.addEventListener("statechange", onStateChange, { passive: true })
 
-        const [basename] = Path.filename(latestScriptUrl.pathname).split(".")
-
-        const latestVersionScriptPath = `${basename}.${latestVersion}.js`
+        const latestVersionScriptPath = `${latestScriptBasename}.${latestVersion}.js`
         const latestVersionScriptUrl = new URL(latestVersionScriptPath, latestScriptUrl)
 
         await navigator.serviceWorker.register(latestVersionScriptUrl, { updateViaCache: "all" })
