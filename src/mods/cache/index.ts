@@ -61,7 +61,7 @@ export class Cache {
       /**
        * Fetch but skip cache-control
        */
-      const fetched = await fetch(request, { cache: "reload" })
+      const fetched = await fetch(request, { cache: "reload", redirect: "follow" })
 
       /**
        * Remove junk properties e.g. redirected
@@ -89,7 +89,7 @@ export class Cache {
 
           const request2 = new Request(url2, request)
 
-          const fetched2 = await fetch(request2, { cache: "reload" })
+          const fetched2 = await fetch(request2, { cache: "reload", redirect: "follow" })
 
           const cleaned2 = new Response(fetched2.body, fetched2)
 
@@ -119,7 +119,7 @@ export class Cache {
 
           const request2 = new Request(url2, request)
 
-          const fetched2 = await fetch(request2, { cache: "reload" })
+          const fetched2 = await fetch(request2, { cache: "reload", redirect: "follow" })
 
           const cleaned2 = new Response(fetched2.body, fetched2)
 
