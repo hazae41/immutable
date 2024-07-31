@@ -1,3 +1,4 @@
+import { Errors } from "libs/errors/index.js"
 import { Path } from "libs/path/index.js"
 import { InvalidSha256HashError } from "./errors.js"
 
@@ -37,126 +38,130 @@ export class Cache {
    * @returns 
    */
   async defetch(request: Request, expected: string) {
-    const cache = await caches.open("#files")
-
-    /**
-     * Check cache if possible
-     */
-    if (request.cache !== "reload") {
-      const cached = await cache.match(request)
-
-      if (cached != null)
-        /**
-         * Found
-         */
-        return cached
+    try {
+      const cache = await caches.open("#files")
 
       /**
-       * Not found
+       * Check cache if possible
        */
-    }
+      if (request.cache !== "reload") {
+        const cached = await cache.match(request)
 
-    /**
-     * Fetch but skip cache-control
-     */
-    const fetched = await fetch(request, { cache: "reload" })
-
-    /**
-     * Remove junk properties e.g. redirected
-     */
-    const cleaned = new Response(fetched.body, fetched)
-
-    let response = cleaned
-
-    /**
-     * Try to fetch similar URLs
-     */
-    if (!response.ok) {
-      const url = new URL(request.url)
-
-      /**
-       * Match <pathname>/index.html
-       */
-      if (url.pathname.endsWith("/index.html")) {
-        const url2 = new URL(url)
-
-        /**
-         * Remove /index.html
-         */
-        url2.pathname = Path.dirname(url.pathname)
-
-        const request2 = new Request(url2, request)
-
-        const fetched2 = await fetch(request2, { cache: "reload" })
-
-        const cleaned2 = new Response(fetched2.body, fetched2)
-
-        if (!cleaned2.ok)
+        if (cached != null)
           /**
-           * Return original error
+           * Found
            */
-          return response
+          return cached
 
-        response = cleaned2
-
-        /**
-         * Continue
-         */
-      }
-
-      /**
-       * Match <pathname>.html
-       */
-      else if (url.pathname.endsWith(".html")) {
-        const url2 = new URL(url)
-
-        /**
-         * Remove .html
-         */
-        url2.pathname = url.pathname.slice(0, -5)
-
-        const request2 = new Request(url2, request)
-
-        const fetched2 = await fetch(request2, { cache: "reload" })
-
-        const cleaned2 = new Response(fetched2.body, fetched2)
-
-        if (!cleaned2.ok)
-          /**
-           * Return original error
-           */
-          return response
-
-        response = cleaned2
-
-        /**
-         * Continue
-         */
-      }
-
-      else {
         /**
          * Not found
          */
-        return response
       }
 
       /**
-       * Continue
+       * Fetch but skip cache-control
        */
+      const fetched = await fetch(request, { cache: "reload" })
+
+      /**
+       * Remove junk properties e.g. redirected
+       */
+      const cleaned = new Response(fetched.body, fetched)
+
+      let response = cleaned
+
+      /**
+       * Try to fetch similar URLs
+       */
+      if (!response.ok) {
+        const url = new URL(request.url)
+
+        /**
+         * Match <pathname>/index.html
+         */
+        if (url.pathname.endsWith("/index.html")) {
+          const url2 = new URL(url)
+
+          /**
+           * Remove /index.html
+           */
+          url2.pathname = Path.dirname(url.pathname)
+
+          const request2 = new Request(url2, request)
+
+          const fetched2 = await fetch(request2, { cache: "reload" })
+
+          const cleaned2 = new Response(fetched2.body, fetched2)
+
+          if (!cleaned2.ok)
+            /**
+             * Return original error
+             */
+            return response
+
+          response = cleaned2
+
+          /**
+           * Continue
+           */
+        }
+
+        /**
+         * Match <pathname>.html
+         */
+        else if (url.pathname.endsWith(".html")) {
+          const url2 = new URL(url)
+
+          /**
+           * Remove .html
+           */
+          url2.pathname = url.pathname.slice(0, -5)
+
+          const request2 = new Request(url2, request)
+
+          const fetched2 = await fetch(request2, { cache: "reload" })
+
+          const cleaned2 = new Response(fetched2.body, fetched2)
+
+          if (!cleaned2.ok)
+            /**
+             * Return original error
+             */
+            return response
+
+          response = cleaned2
+
+          /**
+           * Continue
+           */
+        }
+
+        else {
+          /**
+           * Not found
+           */
+          return response
+        }
+
+        /**
+         * Continue
+         */
+      }
+
+      const hashBytes = new Uint8Array(await crypto.subtle.digest("SHA-256", await response.clone().arrayBuffer()))
+      const hashRawHex = Array.from(hashBytes).map(b => b.toString(16).padStart(2, "0")).join("")
+
+      const received = hashRawHex
+
+      if (received !== expected)
+        throw new InvalidSha256HashError(request.url, expected, received)
+
+      cache.put(request, response.clone())
+
+      return response
+    } catch (e: unknown) {
+      return new Response(Errors.toString(e), { status: 500 })
     }
-
-    const hashBytes = new Uint8Array(await crypto.subtle.digest("SHA-256", await response.clone().arrayBuffer()))
-    const hashRawHex = Array.from(hashBytes).map(b => b.toString(16).padStart(2, "0")).join("")
-
-    const received = hashRawHex
-
-    if (received !== expected)
-      throw new InvalidSha256HashError(request.url, expected, received)
-
-    cache.put(request, response.clone())
-
-    return response
   }
 
   /**
