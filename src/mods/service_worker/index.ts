@@ -42,9 +42,6 @@ export async function register(latestScriptRawUrl: string | URL, options: Immuta
     const currentVersion = JsonLocalStorage.get("service_worker.current.version")
     const pendingVersion = JsonLocalStorage.get("service_worker.pending.version")
 
-    if (currentVersion == null)
-      return
-
     if (currentVersion !== pendingVersion) {
       console.warn(`Unsolicited service worker update detected`)
 
@@ -107,6 +104,7 @@ export async function register(latestScriptRawUrl: string | URL, options: Immuta
     const latestVersionScriptUrl = new URL(latestVersionScriptPath, latestScriptUrl)
 
     JsonLocalStorage.set("service_worker.current.version", latestVersion)
+    JsonLocalStorage.set("service_worker.pending.version", latestVersion)
 
     await navigator.serviceWorker.register(latestVersionScriptUrl, { updateViaCache: "all" })
 
