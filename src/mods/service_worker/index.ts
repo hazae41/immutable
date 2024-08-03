@@ -20,9 +20,9 @@ export async function register(latestScriptRawUrl: string | URL, options: Immuta
     return
   }
 
-  const bricked = JsonLocalStorage.get("service_worker.bricked")
+  const isBricked = JsonLocalStorage.get("service_worker.bricked")
 
-  if (bricked)
+  if (isBricked)
     throw new Error(`This website is bricked`)
 
   /**
@@ -42,49 +42,48 @@ export async function register(latestScriptRawUrl: string | URL, options: Immuta
     const currentVersion = JsonLocalStorage.get("service_worker.current.version")
     const pendingVersion = JsonLocalStorage.get("service_worker.pending.version")
 
+    if (currentVersion == null)
+      return
+
+    if (currentVersion !== pendingVersion) {
+      console.warn(`Unsolicited service worker update detected`)
+
+      /**
+       * Only clear synchronous storage as we must be faster than the service worker
+       */
+      localStorage.clear()
+      sessionStorage.clear()
+
+      console.warn(`Successfully cleared storage`)
+
+      /**
+       * Unregister service worker to prevent further attacks
+       */
+      registration.unregister()
+
+      console.warn(`Successfully unregistered service worker`)
+
+      /**
+       * Enter brick mode
+       */
+      JsonLocalStorage.set("service_worker.bricked", true)
+
+      console.warn(`Successfully entered brick mode`)
+
+      while (true)
+        alert(`An unsolicited update attack was detected. Your storage has been safely erased. Please report this incident urgently. Please do not use this website (${location.origin}) anymore. Please close this page.`)
+
+      /**
+       * Page should be closed by now
+       */
+      return
+    }
+
     installing.addEventListener("statechange", async () => {
       if (installing.state !== "installed")
         return
       JsonLocalStorage.set("service_worker.pending.version", undefined)
     })
-
-    /**
-     * An update was pending and solicited
-     */
-    if (pendingVersion === currentVersion)
-      return
-
-    console.warn(`Unsolicited service worker update detected`)
-
-    /**
-     * Only clear synchronous storage as we must be faster than the service worker
-     */
-    localStorage.clear()
-    sessionStorage.clear()
-
-    console.warn(`Successfully cleared storage`)
-
-    /**
-     * Unregister service worker to prevent further attacks
-     */
-    registration.unregister()
-
-    console.warn(`Successfully unregistered service worker`)
-
-    /**
-     * Enter brick mode
-     */
-    JsonLocalStorage.set("service_worker.bricked", true)
-
-    console.warn(`Successfully entered brick mode`)
-
-    while (true)
-      alert(`An unsolicited update attack was detected. Your storage has been safely erased. Please report this incident urgently. Please do not use this website (${location.origin}) anymore. Please close this page.`)
-
-    /**
-     * Page should be closed by now
-     */
-    return
   })
 
   const currentVersion = JsonLocalStorage.get("service_worker.current.version")
