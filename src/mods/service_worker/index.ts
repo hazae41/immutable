@@ -4,6 +4,7 @@ import { Path } from "libs/path/index.js"
 import { JsonLocalStorage } from "libs/storage/index.js"
 
 export interface ImmutableRegistrationOptions {
+  readonly localStoragePrefix?: string
   readonly shouldCheckUpdates?: boolean
 }
 
@@ -13,14 +14,14 @@ export interface ImmutableRegistrationOptions {
  * @returns 
  */
 export async function register(latestScriptRawUrl: string | URL, options: ImmutableRegistrationOptions = {}): Promise<Nullable<() => Promise<void>>> {
-  const { shouldCheckUpdates = true } = options
+  const { shouldCheckUpdates = true, localStoragePrefix = `` } = options
 
   if (process.env.NODE_ENV !== "production") {
     await navigator.serviceWorker.register(latestScriptRawUrl, { updateViaCache: "none" })
     return
   }
 
-  const isBricked = JsonLocalStorage.get("service_worker.bricked")
+  const isBricked = JsonLocalStorage.get(`${localStoragePrefix}service_worker.bricked`)
 
   if (isBricked)
     throw new Error(`This website is bricked`)
@@ -39,8 +40,8 @@ export async function register(latestScriptRawUrl: string | URL, options: Immuta
     if (installing == null)
       return
 
-    const currentVersion = JsonLocalStorage.get("service_worker.current.version")
-    const pendingVersion = JsonLocalStorage.get("service_worker.pending.version")
+    const currentVersion = JsonLocalStorage.get(`${localStoragePrefix}service_worker.current.version`)
+    const pendingVersion = JsonLocalStorage.get(`${localStoragePrefix}service_worker.pending.version`)
 
     if (currentVersion !== pendingVersion) {
       console.warn(`Unsolicited service worker update detected`)
@@ -63,7 +64,7 @@ export async function register(latestScriptRawUrl: string | URL, options: Immuta
       /**
        * Enter brick mode
        */
-      JsonLocalStorage.set("service_worker.bricked", true)
+      JsonLocalStorage.set(`${localStoragePrefix}service_worker.bricked`, true)
 
       console.warn(`Successfully entered brick mode`)
 
@@ -79,11 +80,11 @@ export async function register(latestScriptRawUrl: string | URL, options: Immuta
     installing.addEventListener("statechange", async () => {
       if (installing.state !== "installed")
         return
-      JsonLocalStorage.set("service_worker.pending.version", undefined)
+      JsonLocalStorage.set(`${localStoragePrefix}service_worker.pending.version`, undefined)
     })
   })
 
-  const currentVersion = JsonLocalStorage.get("service_worker.current.version")
+  const currentVersion = JsonLocalStorage.get(`${localStoragePrefix}service_worker.current.version`)
 
   if (currentVersion == null) {
     const latestScriptUrl = new URL(latestScriptRawUrl, location.href)
@@ -103,8 +104,8 @@ export async function register(latestScriptRawUrl: string | URL, options: Immuta
     const latestVersionScriptPath = `${latestScriptBasename}.${latestVersion}.js`
     const latestVersionScriptUrl = new URL(latestVersionScriptPath, latestScriptUrl)
 
-    JsonLocalStorage.set("service_worker.current.version", latestVersion)
-    JsonLocalStorage.set("service_worker.pending.version", latestVersion)
+    JsonLocalStorage.set(`${localStoragePrefix}service_worker.current.version`, latestVersion)
+    JsonLocalStorage.set(`${localStoragePrefix}service_worker.pending.version`, latestVersion)
 
     await navigator.serviceWorker.register(latestVersionScriptUrl, { updateViaCache: "all" })
 
@@ -148,7 +149,7 @@ export async function register(latestScriptRawUrl: string | URL, options: Immuta
       if (active == null)
         return
 
-      const currentVersion = JsonLocalStorage.get("service_worker.current.version")
+      const currentVersion = JsonLocalStorage.get(`${localStoragePrefix}service_worker.current.version`)
 
       /**
        * Recheck to avoid concurrent updates
@@ -156,8 +157,8 @@ export async function register(latestScriptRawUrl: string | URL, options: Immuta
       if (currentVersion === latestVersion)
         return
 
-      JsonLocalStorage.set("service_worker.current.version", latestVersion)
-      JsonLocalStorage.set("service_worker.pending.version", latestVersion)
+      JsonLocalStorage.set(`${localStoragePrefix}service_worker.current.version`, latestVersion)
+      JsonLocalStorage.set(`${localStoragePrefix}service_worker.pending.version`, latestVersion)
 
       const future = new Future<void>()
 
