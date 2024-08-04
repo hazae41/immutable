@@ -108,4 +108,5 @@ Use the `README` from each adapter to find complete instructions
 
 Here is a list of immutable webapps
 
+- https://wallet.brume.money / https://github.com/brumewallet/wallet
 - https://dstorage.hazae41.me/v0 / https://github.com/hazae41/dstorage
