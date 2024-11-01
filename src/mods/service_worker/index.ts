@@ -94,8 +94,16 @@ export async function register(latestScriptRawUrl: string | URL, options: Immuta
 
     if (!latestScriptRes.ok)
       throw new Error(`Failed to fetch latest service-worker`)
-    if (latestScriptRes.headers.get("cache-control") !== "public, max-age=31536000, immutable")
-      throw new Error(`Wrong Cache-Control header for latest service-worker`)
+
+    const cache = latestScriptRes.headers.get("cache-control")
+
+    if (!cache?.includes("immutable"))
+      alert(`This website is not distributed as immutable. Use it at your own risk.`)
+
+    const ttl = cache?.split(",").map(s => s.trim()).find(s => s.startsWith("max-age="))?.split("=").at(-1)
+
+    if (ttl !== "31536000")
+      alert(`This website is distributed with a time-to-live less than 1 year. Use it at your own risk.`)
 
     const latestHashBytes = new Uint8Array(await crypto.subtle.digest("SHA-256", await latestScriptRes.arrayBuffer()))
     const latestHashRawHex = Array.from(latestHashBytes).map(b => b.toString(16).padStart(2, "0")).join("")
@@ -132,12 +140,12 @@ export async function register(latestScriptRawUrl: string | URL, options: Immuta
     const cache = latestScriptRes.headers.get("cache-control")
 
     if (!cache?.includes("immutable"))
-      alert("This webapp is not distributed as immutable. Use it at your own risk.")
+      alert(`This website is not distributed as immutable. Use it at your own risk.`)
 
     const ttl = cache?.split(",").map(s => s.trim()).find(s => s.startsWith("max-age="))?.split("=").at(-1)
 
     if (ttl !== "31536000")
-      alert("This webapp is distributed with a time-to-live less than 1 year. Use it at your own risk.")
+      alert(`This website is distributed with a time-to-live less than 1 year. Use it at your own risk.`)
 
     const latestHashBytes = new Uint8Array(await crypto.subtle.digest("SHA-256", await latestScriptRes.arrayBuffer()))
     const latestHashRawHex = Array.from(latestHashBytes).map(b => b.toString(16).padStart(2, "0")).join("")
