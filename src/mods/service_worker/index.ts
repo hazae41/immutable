@@ -21,11 +21,6 @@ export async function register(latestScriptRawUrl: string | URL, options: Immuta
     return
   }
 
-  const isBricked = JsonLocalStorage.get(`${localStoragePrefix}service_worker.bricked`)
-
-  if (isBricked)
-    throw new Error(`This website is bricked`)
-
   /**
    * Get previous registration
    */
@@ -43,45 +38,16 @@ export async function register(latestScriptRawUrl: string | URL, options: Immuta
     const currentVersion = JsonLocalStorage.get(`${localStoragePrefix}service_worker.current.version`)
     const pendingVersion = JsonLocalStorage.get(`${localStoragePrefix}service_worker.pending.version`)
 
-    if (currentVersion !== pendingVersion) {
-      console.warn(`Unsolicited service worker update detected`)
-
-      /**
-       * Only clear synchronous storage as we must be faster than the service worker
-       */
-      localStorage.clear()
-      sessionStorage.clear()
-
-      console.warn(`Successfully cleared storage`)
-
-      /**
-       * Unregister service worker to prevent further attacks
-       */
-      registration.unregister()
-
-      console.warn(`Successfully unregistered service worker`)
-
-      /**
-       * Enter brick mode
-       */
-      JsonLocalStorage.set(`${localStoragePrefix}service_worker.bricked`, true)
-
-      console.warn(`Successfully entered brick mode`)
-
-      while (true)
-        alert(`An unsolicited update attack was detected. Your storage has been safely erased. Please report this incident urgently. Please do not use this website (${location.origin}) anymore. Please close this page.`)
-
-      /**
-       * Page should be closed by now
-       */
-      return
-    }
-
     installing.addEventListener("statechange", async () => {
       if (installing.state !== "installed")
         return
       JsonLocalStorage.set(`${localStoragePrefix}service_worker.pending.version`, undefined)
     })
+
+    if (pendingVersion === currentVersion)
+      return
+
+    alert(`An unsolicited update was detected and this may indicate an ongoing attack. Please use this website (${location.origin}) with caution and contact administrators if you think this is not normal.`)
   })
 
   const currentVersion = JsonLocalStorage.get(`${localStoragePrefix}service_worker.current.version`)
