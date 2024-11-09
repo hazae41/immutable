@@ -92,17 +92,9 @@ Or encrypt it with an user-password and prompting that password after the update
 
 So the user is able to manually verify the new service-worker before entering his password.
 
-## Adapters
-
-You can integrate the immutable framework to an existing client-side webapp.
+## Subframeworks
 
 - [Next.js as Immutable](https://github.com/hazae41/next-as-immutable)
-
-Or you can start a new one from the starter example webapp (TODO).
-
-## Setup
-
-Use the `README` from each adapter to find complete instructions
 
 ## Examples
 
