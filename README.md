@@ -100,4 +100,4 @@ So the user is able to manually verify the new service-worker before entering hi
 
 Here is a list of immutable webapps
 
-- https://wallet.brume.money / https://github.com/brumewallet/wallet
+- https://wallet.brume.money / https://github.com/brumeproject/wallet
