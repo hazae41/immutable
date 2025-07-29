@@ -52,6 +52,8 @@ export async function register(crudeScriptRawUrl: string | URL, options: Registr
   if (stale == null) {
     const fresh = await navigator.serviceWorker.register(freshScriptUrl, { scope, type, updateViaCache: "all" })
 
+    await getOrWaitActiveServiceWorkerOrThrow(fresh)
+
     fresh.addEventListener("updatefound", onupdatefound, {})
 
     return new ServiceWorkerRegistrationWithUpdate(fresh)
@@ -63,6 +65,8 @@ export async function register(crudeScriptRawUrl: string | URL, options: Registr
 
   if (crudeScriptBasename !== staleScriptBasename) {
     const fresh = await navigator.serviceWorker.register(freshScriptUrl, { scope, type, updateViaCache: "all" })
+
+    await getOrWaitActiveServiceWorkerOrThrow(fresh)
 
     fresh.addEventListener("updatefound", onupdatefound, {})
 
@@ -78,6 +82,8 @@ export async function register(crudeScriptRawUrl: string | URL, options: Registr
     stale.removeEventListener("updatefound", onupdatefound, {})
 
     const fresh = await navigator.serviceWorker.register(freshScriptUrl, { scope, type, updateViaCache: "all" })
+
+    await getOrWaitActiveServiceWorkerOrThrow(fresh)
 
     fresh.addEventListener("updatefound", onupdatefound, {})
 
