@@ -1,6 +1,5 @@
 import { Errors } from "libs/errors/index.js"
 import { Path } from "libs/path/index.js"
-import { InvalidSha256HashError } from "./errors.js"
 
 export class Cache {
 
@@ -25,8 +24,8 @@ export class Cache {
 
     const promises = new Array<Promise<Response>>()
 
-    for (const [file, hash] of this.files)
-      promises.push(this.defetch(new Request(file), hash))
+    for (const [file, integrity] of this.files)
+      promises.push(this.defetch(new Request(file), integrity))
 
     await Promise.all(promises)
   }
@@ -34,10 +33,10 @@ export class Cache {
   /**
    * Match or fetch and cache
    * @param request 
-   * @param expected 
+   * @param integrity 
    * @returns 
    */
-  async defetch(request: Request, expected: string) {
+  async defetch(request: Request, integrity: string) {
     try {
       const cache = await caches.open("#files")
 
@@ -59,9 +58,9 @@ export class Cache {
       }
 
       /**
-       * Fetch but skip cache-control
+       * Fetch but skip cache
        */
-      const fetched = await fetch(request, { cache: "reload", redirect: "follow" })
+      const fetched = await fetch(request, { cache: "reload", redirect: "follow", integrity })
 
       /**
        * Remove junk properties e.g. redirected
@@ -89,7 +88,7 @@ export class Cache {
 
           const request2 = new Request(url2, request)
 
-          const fetched2 = await fetch(request2, { cache: "reload", redirect: "follow" })
+          const fetched2 = await fetch(request2, { cache: "reload", redirect: "follow", integrity })
 
           const cleaned2 = new Response(fetched2.body, fetched2)
 
@@ -119,7 +118,7 @@ export class Cache {
 
           const request2 = new Request(url2, request)
 
-          const fetched2 = await fetch(request2, { cache: "reload", redirect: "follow" })
+          const fetched2 = await fetch(request2, { cache: "reload", redirect: "follow", integrity })
 
           const cleaned2 = new Response(fetched2.body, fetched2)
 
@@ -148,14 +147,6 @@ export class Cache {
          */
       }
 
-      const hashBytes = new Uint8Array(await crypto.subtle.digest("SHA-256", await response.clone().arrayBuffer()))
-      const hashRawHex = Array.from(hashBytes).map(b => b.toString(16).padStart(2, "0")).join("")
-
-      const received = hashRawHex
-
-      if (received !== expected)
-        throw new InvalidSha256HashError(request.url, expected, received)
-
       cache.put(request, response.clone())
 
       return response
@@ -178,21 +169,19 @@ export class Cache {
     if (url.pathname.endsWith("/"))
       url.pathname = url.pathname.slice(0, -1)
 
-    const hash = this.files.get(url.pathname)
+    const integrity = this.files.get(url.pathname)
 
-    if (hash != null) {
+    if (integrity != null) {
       /**
        * Do magic
        */
-      event.respondWith(this.defetch(event.request, hash))
+      event.respondWith(this.defetch(event.request, integrity))
 
       /**
        * Found
        */
       return
     }
-
-    const [dirname, filename] = Path.pathnames(url.pathname)
 
     /**
      * Match /index.html
@@ -202,9 +191,9 @@ export class Cache {
 
       url2.pathname = "/index.html"
 
-      const hash = this.files.get(url2.pathname)
+      const integrity = this.files.get(url2.pathname)
 
-      if (hash != null) {
+      if (integrity != null) {
         /**
          * Modify mode
          */
@@ -218,40 +207,7 @@ export class Cache {
         /**
          * Do magic
          */
-        event.respondWith(this.defetch(request1, hash))
-
-        /**
-         * Found
-         */
-        return
-      }
-    }
-
-    /**
-     * Match /_index.html
-     */
-    if (url.pathname === "/") {
-      const url2 = new URL(url)
-
-      url2.pathname = "/_index.html"
-
-      const hash = this.files.get(url2.pathname)
-
-      if (hash != null) {
-        /**
-         * Modify mode
-         */
-        const request0 = new Request(event.request, { mode: "same-origin" })
-
-        /**
-         * Modify url
-         */
-        const request1 = new Request(url2, request0)
-
-        /**
-         * Do magic
-         */
-        event.respondWith(this.defetch(request1, hash))
+        event.respondWith(this.defetch(request1, integrity))
 
         /**
          * Found
@@ -268,9 +224,9 @@ export class Cache {
 
       url2.pathname += ".html"
 
-      const hash = this.files.get(url2.pathname)
+      const integrity = this.files.get(url2.pathname)
 
-      if (hash != null) {
+      if (integrity != null) {
         /**
          * Modify mode
          */
@@ -284,7 +240,7 @@ export class Cache {
         /**
          * Do magic
          */
-        event.respondWith(this.defetch(request1, hash))
+        event.respondWith(this.defetch(request1, integrity))
 
         /**
          * Found
@@ -301,9 +257,9 @@ export class Cache {
 
       url2.pathname += "/index.html"
 
-      const hash = this.files.get(url2.pathname)
+      const integrity = this.files.get(url2.pathname)
 
-      if (hash != null) {
+      if (integrity != null) {
 
         /**
          * Modify mode
@@ -318,139 +274,7 @@ export class Cache {
         /**
          * Do magic
          */
-        event.respondWith(this.defetch(request1, hash))
-
-        /**
-         * Found
-         */
-        return
-      }
-    }
-
-    /**
-     * Match <pathname>/_index.html
-     */
-    if (url.pathname !== "/") {
-      const url2 = new URL(url)
-
-      url2.pathname += "/_index.html"
-
-      const hash = this.files.get(url2.pathname)
-
-      if (hash != null) {
-        /**
-         * Modify mode
-         */
-        const request0 = new Request(event.request, { mode: "same-origin" })
-
-        /**
-         * Modify url
-         */
-        const request1 = new Request(url2, request0)
-
-        /**
-         * Do magic
-         */
-        event.respondWith(this.defetch(request1, hash))
-
-        /**
-         * Found
-         */
-        return
-      }
-    }
-
-    /**
-     * Match <pathname>/_index/index.html
-     */
-    if (url.pathname !== "/") {
-      const url2 = new URL(url)
-
-      url2.pathname += "/_index/index.html"
-
-      const hash = this.files.get(url2.pathname)
-
-      if (hash != null) {
-        /**
-         * Modify mode
-         */
-        const request0 = new Request(event.request, { mode: "same-origin" })
-
-        /**
-         * Modify url
-         */
-        const request1 = new Request(url2, request0)
-
-        /**
-         * Do magic
-         */
-        event.respondWith(this.defetch(request1, hash))
-
-        /**
-         * Found
-         */
-        return
-      }
-    }
-
-    /**
-     * Match <dirname>/_<filename>.html
-     */
-    if (url.pathname !== "/") {
-      const url2 = new URL(url)
-
-      url2.pathname = `${dirname}/_${filename}.html`
-
-      const hash = this.files.get(url2.pathname)
-
-      if (hash != null) {
-        /**
-         * Modify mode
-         */
-        const request0 = new Request(event.request, { mode: "same-origin" })
-
-        /**
-         * Modify url
-         */
-        const request1 = new Request(url2, request0)
-
-        /**
-         * Do magic
-         */
-        event.respondWith(this.defetch(request1, hash))
-
-        /**
-         * Found
-         */
-        return
-      }
-    }
-
-    /**
-     * Match <dirname>/_<filename>/index.html
-     */
-    if (url.pathname !== "/") {
-      const url2 = new URL(url)
-
-      url2.pathname = `${dirname}/_${filename}/index.html`
-
-      const hash = this.files.get(url2.pathname)
-
-      if (hash != null) {
-        /**
-         * Modify mode
-         */
-        const request0 = new Request(event.request, { mode: "same-origin" })
-
-        /**
-         * Modify url
-         */
-        const request1 = new Request(url2, request0)
-
-        /**
-         * Do magic
-         */
-        event.respondWith(this.defetch(request1, hash))
+        event.respondWith(this.defetch(request1, integrity))
 
         /**
          * Found
