@@ -75,7 +75,7 @@ export async function register(crudeScriptRawUrl: string | URL, options: Registr
 
   stale.addEventListener("updatefound", onupdatefound, {})
 
-  if (staleScriptUrl.href !== freshScriptUrl.href)
+  if (staleScriptUrl.href === freshScriptUrl.href)
     return new ServiceWorkerRegistrationWithUpdate(stale)
 
   const update = async () => {
