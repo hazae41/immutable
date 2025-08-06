@@ -13,8 +13,6 @@ export class ServiceWorkerRegistrationWithUpdate {
 export async function register(crudeScriptRawUrl: string | URL, options: RegistrationOptions = {}): Promise<ServiceWorkerRegistrationWithUpdate> {
   const { scope, type } = options
 
-  const onupdatefound = () => alert(`An update of this website (${location.origin}) is being installed. If you were not expecting this, it may indicate an ongoing attack, so please use this website (${location.origin}) with caution and contact administrators.`)
-
   if (process.env.NODE_ENV !== "production") {
     const fresh = await navigator.serviceWorker.register(crudeScriptRawUrl, { scope, type, updateViaCache: "none" })
 
@@ -54,8 +52,6 @@ export async function register(crudeScriptRawUrl: string | URL, options: Registr
 
     await getOrWaitActiveServiceWorkerOrThrow(fresh)
 
-    fresh.addEventListener("updatefound", onupdatefound, {})
-
     return new ServiceWorkerRegistrationWithUpdate(fresh)
   }
 
@@ -68,24 +64,16 @@ export async function register(crudeScriptRawUrl: string | URL, options: Registr
 
     await getOrWaitActiveServiceWorkerOrThrow(fresh)
 
-    fresh.addEventListener("updatefound", onupdatefound, {})
-
     return new ServiceWorkerRegistrationWithUpdate(fresh)
   }
-
-  stale.addEventListener("updatefound", onupdatefound, {})
 
   if (staleScriptUrl.href === freshScriptUrl.href)
     return new ServiceWorkerRegistrationWithUpdate(stale)
 
   const update = async () => {
-    stale.removeEventListener("updatefound", onupdatefound, {})
-
     const fresh = await navigator.serviceWorker.register(freshScriptUrl, { scope, type, updateViaCache: "all" })
 
     await getOrWaitActiveServiceWorkerOrThrow(fresh)
-
-    fresh.addEventListener("updatefound", onupdatefound, {})
 
     return fresh
   }
