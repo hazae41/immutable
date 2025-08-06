@@ -157,7 +157,7 @@ export class Cache {
    * @param event 
    * @returns 
    */
-  handle(event: FetchEvent, request: Request = event.request) {
+  handle(request: Request) {
     const url = new URL(request.url)
 
     if (url.pathname.endsWith("/"))
@@ -169,12 +169,7 @@ export class Cache {
       /**
        * Do magic
        */
-      event.respondWith(this.defetch(request, integrity))
-
-      /**
-       * Found
-       */
-      return
+      return this.defetch(request, integrity)
     }
 
     /**
@@ -201,12 +196,7 @@ export class Cache {
         /**
          * Do magic
          */
-        event.respondWith(this.defetch(request1, integrity))
-
-        /**
-         * Found
-         */
-        return
+        return this.defetch(request1, integrity)
       }
     }
 
@@ -234,12 +224,7 @@ export class Cache {
         /**
          * Do magic
          */
-        event.respondWith(this.defetch(request1, integrity))
-
-        /**
-         * Found
-         */
-        return
+        return this.defetch(request1, integrity)
       }
     }
 
@@ -268,12 +253,7 @@ export class Cache {
         /**
          * Do magic
          */
-        event.respondWith(this.defetch(request1, integrity))
-
-        /**
-         * Found
-         */
-        return
+        return this.defetch(request1, integrity)
       }
     }
 
