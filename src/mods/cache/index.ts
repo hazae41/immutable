@@ -19,9 +19,6 @@ export class Cache {
    * @returns 
    */
   async precache() {
-    if (process.env.NODE_ENV === "development")
-      return
-
     const promises = new Array<Promise<Response>>()
 
     for (const [file, integrity] of this.files)
@@ -161,9 +158,6 @@ export class Cache {
    * @returns 
    */
   handle(event: FetchEvent, request: Request = event.request) {
-    if (process.env.NODE_ENV === "development")
-      return
-
     const url = new URL(request.url)
 
     if (url.pathname.endsWith("/"))
