@@ -21,7 +21,7 @@ export async function register(crudeScriptRawUrl: string | URL, options: Registr
   const crudeScriptResponse = await fetch(crudeScriptUrl, { cache: "reload" })
 
   if (!crudeScriptResponse.ok)
-    throw new Error(`Could not fetch service worker`)
+    throw new Error(`Could not fetch service worker`, { cause: crudeScriptResponse })
 
   const ccl = crudeScriptResponse.headers.get("cache-control")
 
