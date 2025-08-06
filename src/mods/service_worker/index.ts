@@ -13,13 +13,8 @@ export class ServiceWorkerRegistrationWithUpdate {
 export async function register(crudeScriptRawUrl: string | URL, options: RegistrationOptions = {}): Promise<ServiceWorkerRegistrationWithUpdate> {
   const { scope, type } = options
 
-  if (process.env.NODE_ENV !== "production") {
-    const fresh = await navigator.serviceWorker.register(crudeScriptRawUrl, { scope, type, updateViaCache: "none" })
-
-    // NOOP
-
-    return new ServiceWorkerRegistrationWithUpdate(fresh)
-  }
+  if (process.env.NODE_ENV !== "production")
+    return new ServiceWorkerRegistrationWithUpdate(await navigator.serviceWorker.register(crudeScriptRawUrl, { scope, type, updateViaCache: "none" }))
 
   const crudeScriptUrl = new URL(crudeScriptRawUrl, location.href)
   const crudeScriptBasename = Path.filename(crudeScriptUrl.pathname).split(".")[0]
@@ -47,36 +42,18 @@ export async function register(crudeScriptRawUrl: string | URL, options: Registr
 
   const stale = await navigator.serviceWorker.getRegistration(scope)
 
-  if (stale == null) {
-    const fresh = await navigator.serviceWorker.register(freshScriptUrl, { scope, type, updateViaCache: "all" })
-
-    await getOrWaitActiveServiceWorkerOrThrow(fresh)
-
-    return new ServiceWorkerRegistrationWithUpdate(fresh)
-  }
+  if (stale == null)
+    return new ServiceWorkerRegistrationWithUpdate(await navigator.serviceWorker.register(freshScriptUrl, { scope, type, updateViaCache: "all" }))
 
   const staleScript = await getOrWaitActiveServiceWorkerOrThrow(stale)
   const staleScriptUrl = new URL(staleScript.scriptURL, location.href)
   const staleScriptBasename = Path.filename(staleScriptUrl.pathname).split(".")[0]
 
-  if (crudeScriptBasename !== staleScriptBasename) {
-    const fresh = await navigator.serviceWorker.register(freshScriptUrl, { scope, type, updateViaCache: "all" })
-
-    await getOrWaitActiveServiceWorkerOrThrow(fresh)
-
-    return new ServiceWorkerRegistrationWithUpdate(fresh)
-  }
+  if (crudeScriptBasename !== staleScriptBasename)
+    return new ServiceWorkerRegistrationWithUpdate(await navigator.serviceWorker.register(freshScriptUrl, { scope, type, updateViaCache: "all" }))
 
   if (staleScriptUrl.href === freshScriptUrl.href)
     return new ServiceWorkerRegistrationWithUpdate(stale)
 
-  const update = async () => {
-    const fresh = await navigator.serviceWorker.register(freshScriptUrl, { scope, type, updateViaCache: "all" })
-
-    await getOrWaitActiveServiceWorkerOrThrow(fresh)
-
-    return fresh
-  }
-
-  return new ServiceWorkerRegistrationWithUpdate(stale, update)
+  return new ServiceWorkerRegistrationWithUpdate(stale, () => navigator.serviceWorker.register(freshScriptUrl, { scope, type, updateViaCache: "all" }))
 }
