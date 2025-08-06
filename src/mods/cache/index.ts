@@ -160,11 +160,11 @@ export class Cache {
    * @param event 
    * @returns 
    */
-  handle(event: FetchEvent) {
+  handle(event: FetchEvent, request: Request = event.request) {
     if (process.env.NODE_ENV === "development")
       return
 
-    const url = new URL(event.request.url)
+    const url = new URL(request.url)
 
     if (url.pathname.endsWith("/"))
       url.pathname = url.pathname.slice(0, -1)
@@ -175,7 +175,7 @@ export class Cache {
       /**
        * Do magic
        */
-      event.respondWith(this.defetch(event.request, integrity))
+      event.respondWith(this.defetch(request, integrity))
 
       /**
        * Found
@@ -197,7 +197,7 @@ export class Cache {
         /**
          * Modify mode
          */
-        const request0 = new Request(event.request, { mode: "same-origin" })
+        const request0 = new Request(request, { mode: "same-origin" })
 
         /**
          * Modify url
@@ -230,7 +230,7 @@ export class Cache {
         /**
          * Modify mode
          */
-        const request0 = new Request(event.request, { mode: "same-origin" })
+        const request0 = new Request(request, { mode: "same-origin" })
 
         /**
          * Modify url
@@ -264,7 +264,7 @@ export class Cache {
         /**
          * Modify mode
          */
-        const request0 = new Request(event.request, { mode: "same-origin" })
+        const request0 = new Request(request, { mode: "same-origin" })
 
         /**
          * Modify url
