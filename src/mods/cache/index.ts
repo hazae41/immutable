@@ -1,5 +1,4 @@
 import { Errors } from "libs/errors/index.js"
-import { Path } from "libs/path/index.js"
 
 export class Cache {
 
@@ -64,89 +63,9 @@ export class Cache {
        */
       const cleaned = new Response(fetched.body, fetched)
 
-      let response = cleaned
+      cache.put(request, cleaned.clone())
 
-      /**
-       * Try to fetch similar URLs
-       */
-      if (!response.ok) {
-        const url = new URL(request.url)
-
-        /**
-         * Match <pathname>/index.html
-         */
-        if (url.pathname.endsWith("/index.html")) {
-          const url2 = new URL(url)
-
-          /**
-           * Remove /index.html
-           */
-          url2.pathname = Path.dirname(url.pathname)
-
-          const request2 = new Request(url2, request)
-
-          const fetched2 = await fetch(request2, { cache: "reload", redirect: "follow", integrity })
-
-          const cleaned2 = new Response(fetched2.body, fetched2)
-
-          if (!cleaned2.ok)
-            /**
-             * Return original error
-             */
-            return response
-
-          response = cleaned2
-
-          /**
-           * Continue
-           */
-        }
-
-        /**
-         * Match <pathname>.html
-         */
-        else if (url.pathname.endsWith(".html")) {
-          const url2 = new URL(url)
-
-          /**
-           * Remove .html
-           */
-          url2.pathname = url.pathname.slice(0, -5)
-
-          const request2 = new Request(url2, request)
-
-          const fetched2 = await fetch(request2, { cache: "reload", redirect: "follow", integrity })
-
-          const cleaned2 = new Response(fetched2.body, fetched2)
-
-          if (!cleaned2.ok)
-            /**
-             * Return original error
-             */
-            return response
-
-          response = cleaned2
-
-          /**
-           * Continue
-           */
-        }
-
-        else {
-          /**
-           * Not found
-           */
-          return response
-        }
-
-        /**
-         * Continue
-         */
-      }
-
-      cache.put(request, response.clone())
-
-      return response
+      return cleaned
     } catch (e: unknown) {
       return new Response(Errors.toString(e), { status: 500 })
     }
