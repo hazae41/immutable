@@ -1,3 +1,4 @@
+import { Result } from "@hazae41/result"
 import { Path } from "libs/path/index.js"
 import { getOrWaitActiveServiceWorkerOrThrow } from "libs/service_worker/index.js"
 
@@ -16,9 +17,16 @@ export async function register(crudeScriptRawUrl: string | URL, options: Registr
   if (process.env.NODE_ENV !== "production")
     return new ServiceWorkerRegistrationWithUpdate(await navigator.serviceWorker.register(crudeScriptRawUrl, { scope, type, updateViaCache: "none" }))
 
+  const stale = await navigator.serviceWorker.getRegistration(scope)
+
   const crudeScriptUrl = new URL(crudeScriptRawUrl, location.href)
   const crudeScriptBasename = Path.filename(crudeScriptUrl.pathname).split(".")[0]
-  const crudeScriptResponse = await fetch(crudeScriptUrl, { cache: "reload" })
+  const crudeScriptResult = await Result.runAndWrap(() => fetch(crudeScriptUrl, { cache: "reload" }))
+
+  if (crudeScriptResult.isErr() && stale != null)
+    return new ServiceWorkerRegistrationWithUpdate(stale)
+
+  const crudeScriptResponse = crudeScriptResult.getOrThrow()
 
   if (!crudeScriptResponse.ok)
     throw new Error(`Could not fetch service worker`, { cause: crudeScriptResponse })
@@ -39,8 +47,6 @@ export async function register(crudeScriptRawUrl: string | URL, options: Registr
 
   const freshScriptPath = `${crudeScriptBasename}.${crudeVersion}.js`
   const freshScriptUrl = new URL(freshScriptPath, crudeScriptUrl)
-
-  const stale = await navigator.serviceWorker.getRegistration(scope)
 
   if (stale == null)
     return new ServiceWorkerRegistrationWithUpdate(await navigator.serviceWorker.register(freshScriptUrl, { scope, type, updateViaCache: "all" }))
