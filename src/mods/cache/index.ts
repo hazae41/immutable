@@ -63,8 +63,14 @@ export class Cache {
        */
       const cleaned = new Response(fetched.body, fetched)
 
+      /**
+       * Cache the response
+       */
       cache.put(request, cleaned.clone())
 
+      /**
+       * Found
+       */
       return cleaned
     } catch (e: unknown) {
       return new Response(Errors.toString(e), { status: 500 })
