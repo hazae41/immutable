@@ -50,9 +50,9 @@ All files are hashed and verified using SHA-256 which is both strong and fast.
 
 The Immutable Framework also does things right to avoid server-side attacks at much as possible.
 
-It is compatible with HTTPSec, which means the HTML page can be automatically verified.
+It is compatible with [HTTPSec](https://github.com/hazae41/httpsec), which means the HTML page can be automatically verified.
 
-Unfortunately, you have to manually hash the service-worker to verify it because HTTPSec can't do that.
+Unfortunately, you have to manually hash the service-worker to verify it because HTTPSec can't do that for you.
 
 And since the service-worker verifies the hashes of other files (pages, scripts, assets).
 
