@@ -38,8 +38,6 @@ If an update is detected, it can `register()` the new `service_worker.<version>.
 
 Thus the developer or user is in control of when to update the webapp (e.g. a yes/no/always button).
 
-If the service-worker is updated anyway by the browser (e.g. cache failure), the webapp errors.
-
 -
 
 The other great thing is that all other files are also immutably cached by the service-worker.
