@@ -18,7 +18,7 @@ Security and resilience. An immutable webapp is not prone to server-side attacks
 
 ### How?
 
-New and smart engineering techniques. The extensive use of service-workers and new web APIs allow us to build such webapps. We leverage `Cache-Control`, `Fetch API` and `Crypto API` to distribute and cache webapps immutably. We improve and merge already existing frameworks such as `Next.js` and `Workbox` to fit exactly our needs.
+New and smart engineering techniques. The extensive use of service-workers and new web APIs allow you to build such webapps. By using `Cache-Control`, `Fetch API` and `Crypto API` to distribute and cache webapps immutably. This toolbox improves and merges already existing tools such as `Workbox` to fit exactly our needs.
 
 ## Technology
 
@@ -30,7 +30,7 @@ The service-worker is cached for one year, so it won't be auto-updated before on
 
 In order to update it before one year, we need to `register()` a new service-worker at a different URL.
 
-The webapp runtime fetches `service_worker.js` and check its hash in order to detect updates.
+The webapp runtime fetches `service_worker.js` and check its integrity hash in order to detect updates.
 
 If an update is detected, it can `register()` the new `service_worker.js?version=<version>` file.
 
