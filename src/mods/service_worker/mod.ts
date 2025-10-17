@@ -1,6 +1,5 @@
 import { getOrWaitActiveServiceWorkerOrThrow } from "@/libs/service_worker/mod.ts";
 import { Result } from "@hazae41/result-and-option";
-import process from "node:process";
 
 export class ServiceWorkerRegistrationWithUpdate {
 
@@ -14,6 +13,7 @@ export class ServiceWorkerRegistrationWithUpdate {
 export async function register(crudeScriptRawUrl: string | URL, options: RegistrationOptions = {}): Promise<ServiceWorkerRegistrationWithUpdate> {
   const { scope, type } = options
 
+  // deno-lint-ignore no-process-global
   if (process.env.NODE_ENV !== "production")
     return new ServiceWorkerRegistrationWithUpdate(await navigator.serviceWorker.register(crudeScriptRawUrl, { scope, type, updateViaCache: "none" }))
 
