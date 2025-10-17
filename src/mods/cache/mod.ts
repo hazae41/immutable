@@ -83,7 +83,7 @@ export class Cache {
    * @param event 
    * @returns 
    */
-  handle(request: Request): Promise<Nullable<Response>> {
+  handle(request: Request): Nullable<Promise<Response>> {
     const url = new URL(request.url)
 
     if (url.pathname.endsWith("/"))
