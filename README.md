@@ -1,6 +1,6 @@
-# The Immutable Framework
+# The Immutable Toolbox
 
-Create immutable webapps that are secure and resilient.
+Create immutable webapps that are secure and resilient
 
 ```bash
 npm i @hazae41/immutable
@@ -22,19 +22,17 @@ New and smart engineering techniques. The extensive use of service-workers and n
 
 ## Technology
 
-The most important thing about The Immutable Framework is that service-workers are immutably cached.
+The most important thing about The Immutable Toolbox is that service-workers are immutably cached.
 
-This is done by using immutable `Cache-Control` headers and `{ updateViaCache: "all" }` options.
+This is done by using `Cache-Control` headers and `{ updateViaCache: "all" }` options.
 
-Once the service-worker is cached, the webapp cannot be automatically updated by the browser.
+The service-worker is cached for one year, so it won't be auto-updated before one year has passed.
 
-In order to update it, we need to `register()` a new service-worker at a different URL.
+In order to update it before one year, we need to `register()` a new service-worker at a different URL.
 
-This is done by generating a `service_worker.<version>.js` for each version of your service-worker.
+The webapp runtime fetches `service_worker.js` and check its hash in order to detect updates.
 
-The webapp runtime fetches `service_worker.latest.js` and check its hash in order to detect updates.
-
-If an update is detected, it can `register()` the new `service_worker.<version>.js` file.
+If an update is detected, it can `register()` the new `service_worker.js?version=<version>` file.
 
 Thus the developer or user is in control of when to update the webapp (e.g. a yes/no/always button).
 
@@ -44,37 +42,21 @@ The other great thing is that all other files are also immutably cached by the s
 
 This is done just like `workbox` but with even more checks as the hashes are also verified.
 
-All files are hashed and verified using SHA-256 which is both strong and fast.
+All files are hashed and verified using native SHA-256 which is both strong and fast.
+
+This makes your webapp immutable, as long as the service worker is not updated.
 
 -
 
-The Immutable Framework also does things right to avoid server-side attacks at much as possible.
+It is compatible with [HTTPSec](https://github.com/hazae41/httpsec), which means the HTML page can have its integrity enforced.
 
-It is compatible with [HTTPSec](https://github.com/hazae41/httpsec), which means the HTML page can be automatically verified.
+Unfortunately, HTTPSec can't enforce the service worker, but it can enforce pages, and pages can enforce in-page scripts and assets.
 
-Unfortunately, you have to manually hash the service-worker to verify it because HTTPSec can't do that for you.
-
-And since the service-worker verifies the hashes of other files (pages, scripts, assets).
-
-That means you don't need to manually verify the hash of other files!
-
-So the the only way to compromise the webapp is when you first download it.
-
-But if you also use HTTPSec, then it can only compromise non-script assets.
-
-Otherwise you can trust the whole webapp forever unless you update it!
+So you shouldn't use the service worker for anything important except caching your webapp or doing normal service worker stuff.
 
 -
 
-Updates are tricky since you can't really verify them before applying them.
-
-An update will be able to use the storage and cookies before the user can erase them.
-
-One thing possible is to clear the storage just before a new service-worker is activated.
-
-Or encrypt it with an user-password and prompting that password after the update.
-
-So the user is able to manually verify the new service-worker before entering his password.
+The webapp is only compromisable when you first download it, when you manually update it, or when it's auto-updated after one year.
 
 ## Subframeworks
 
