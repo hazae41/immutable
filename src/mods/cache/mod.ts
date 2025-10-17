@@ -1,4 +1,5 @@
-import { Errors } from "@/libs/errors/index.ts"
+import { Errors } from "@/libs/errors/mod.ts";
+import type { Nullable } from "@/libs/nullable/mod.ts";
 
 export class Cache {
 
@@ -32,7 +33,7 @@ export class Cache {
    * @param integrity 
    * @returns 
    */
-  async defetch(request: Request, integrity: string) {
+  async defetch(request: Request, integrity: string): Promise<Response> {
     try {
       const cache = await caches.open("#files")
 
@@ -82,7 +83,7 @@ export class Cache {
    * @param event 
    * @returns 
    */
-  handle(request: Request) {
+  handle(request: Request): Promise<Nullable<Response>> {
     const url = new URL(request.url)
 
     if (url.pathname.endsWith("/"))

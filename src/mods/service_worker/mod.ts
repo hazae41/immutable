@@ -1,12 +1,6 @@
-import { getOrWaitActiveServiceWorkerOrThrow } from "@/libs/service_worker/index.ts";
+import { getOrWaitActiveServiceWorkerOrThrow } from "@/libs/service_worker/mod.ts";
 import { Result } from "@hazae41/result-and-option";
 import process from "node:process";
-
-declare global {
-  interface Uint8Array {
-    toHex(): string
-  }
-}
 
 export class ServiceWorkerRegistrationWithUpdate {
 
