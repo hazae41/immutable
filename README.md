@@ -10,7 +10,7 @@ npm i @hazae41/immutable
 
 ## Philosophy
 
-Our philosophy is to build webapps that are as immutable as native apps but benefit from the wide distribution of the web. Such webapps are built with strong client-side and offline capabilities. Once downloaded they should be immutably cached and only be updated when the user requests it or has opted-in automatic updates.
+The philosophy is to build webapps that are as immutable as native apps but benefit from the wide distribution of the web. Such webapps are built with strong client-side and offline capabilities. Once downloaded they should be immutably cached and only be updated when the user requests it or has opted-in automatic updates.
 
 ### Why?
 
