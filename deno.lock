@@ -1,0 +1,64 @@
+{
+  "version": "5",
+  "specifiers": {
+    "jsr:@hazae41/phobos@^2.0.10": "2.0.10",
+    "jsr:@hazae41/result-and-option@^2.0.8": "2.0.8",
+    "jsr:@hazae41/tscousin@^1.0.23": "1.0.23",
+    "npm:@hazae41/phobos@^2.0.10": "2.0.10",
+    "npm:@hazae41/result-and-option@^2.0.8": "2.0.8",
+    "npm:@hazae41/tscousin@^1.0.23": "1.0.23",
+    "npm:@types/node@*": "24.2.0",
+    "npm:typescript@^5.9.3": "5.9.3"
+  },
+  "jsr": {
+    "@hazae41/phobos@2.0.10": {
+      "integrity": "02e95522a813f6e058c768ff72890f2008897884cc3cbef1a58b5ec76396c629"
+    },
+    "@hazae41/result-and-option@2.0.8": {
+      "integrity": "c6912e8b04a88ad434c7c4859588db6147a65bc4ce294e4411d6d47bdcdea1e3"
+    },
+    "@hazae41/tscousin@1.0.23": {
+      "integrity": "fbe8b9d01edb43ae5cc5aae6f1d24ade9c897cae2a371f238585db68c3fe4187"
+    }
+  },
+  "npm": {
+    "@hazae41/phobos@2.0.10": {
+      "integrity": "sha512-o+TV5xgsDx23j1rLFPZKKOj9nfMCog4FCQiEHw8IdiUjm4fiJiR3XfH2qHBzBLjN/w3RLoohcfkuaoww7WSYjw=="
+    },
+    "@hazae41/result-and-option@2.0.8": {
+      "integrity": "sha512-Qaf+3tz5aWywy3E7LvNh5N+ClZRiyVor2z54viSlMDBX3f2nMujYv4RS2QWDCnEr3Ylu4Rf4GuC52n7kMTWKow=="
+    },
+    "@hazae41/tscousin@1.0.23": {
+      "integrity": "sha512-bXLYCg7l9Hx9YezKuKdXroVCT4GMOiRoQq1+U77+prv6wwS6BGEQ1XBNdlsfpS5tS/3c5E38potPYWNWyrhUFw==",
+      "bin": true
+    },
+    "@types/node@24.2.0": {
+      "integrity": "sha512-3xyG3pMCq3oYCNg7/ZP+E1ooTaGB4cG8JWRsqqOYQdbWNY4zbaV0Ennrd7stjiJEFZCaybcIgpTjJWHRfBSIDw==",
+      "dependencies": [
+        "undici-types"
+      ]
+    },
+    "typescript@5.9.3": {
+      "integrity": "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==",
+      "bin": true
+    },
+    "undici-types@7.10.0": {
+      "integrity": "sha512-t5Fy/nfn+14LuOc2KNYg75vZqClpAiqscVvMygNnlsHBFpSXdJaYtXMcdNLpl/Qvc3P2cB3s6lOV51nqsFq4ag=="
+    }
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@hazae41/phobos@^2.0.10",
+      "jsr:@hazae41/result-and-option@^2.0.8",
+      "jsr:@hazae41/tscousin@^1.0.23"
+    ],
+    "packageJson": {
+      "dependencies": [
+        "npm:@hazae41/phobos@^2.0.10",
+        "npm:@hazae41/result-and-option@^2.0.8",
+        "npm:@hazae41/tscousin@^1.0.23",
+        "npm:typescript@^5.9.3"
+      ]
+    }
+  }
+}

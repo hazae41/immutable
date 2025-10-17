@@ -1,1 +1,1 @@
-export * as Immutable from "./mods/index.js";
+export * as Immutable from "./mods/index.ts";

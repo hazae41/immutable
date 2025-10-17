@@ -1,4 +1,4 @@
-import { Errors } from "libs/errors/index.js"
+import { Errors } from "@/libs/errors/index.ts"
 
 export class Cache {
 

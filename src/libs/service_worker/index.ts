@@ -1,5 +1,3 @@
-import { Future } from "@hazae41/future"
-
 export async function getOrWaitActiveServiceWorkerOrThrow(registration: ServiceWorkerRegistration) {
   const { active } = registration
 
@@ -20,9 +18,9 @@ export async function getOrWaitServiceWorkerOrThrow(worker: ServiceWorker) {
   if (worker.state === "activated")
     return worker
 
-  const future = new Future<void>()
+  const future = Promise.withResolvers<void>()
 
-  const onStateChange = (event: Event) => {
+  const onStateChange = (_: Event) => {
     if (worker.state === "redundant")
       return void future.reject(new Error(`Service worker is redundant`))
     if (worker.state === "activated")

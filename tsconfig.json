@@ -1,29 +1,18 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "baseUrl": "./src",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "strict": true,
-    "downlevelIteration": true,
-    "lib": [
-      "DOM",
-      "ESNext",
-      "WebWorker"
-    ],
+    "target": "es2024",
+    "rootDir": "./src",
     "paths": {
-      "mods/*": [
-        "mods/*"
-      ],
-      "libs/*": [
-        "libs/*"
-      ],
-      "tests/*": [
-        "tests/*"
-      ],
-    }
+      "@/*": ["./*"]
+    } ,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "outDir": "./out",
+    "declaration": true,
+    "noCheck": true
   },
   "include": [
-    "./src/**/**.ts",
+    "./src/**/*"
   ],
+  "exclude": []
 }

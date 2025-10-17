@@ -1,3 +1,3 @@
-export * from "./cache/index.js";
-export * from "./service_worker/index.js";
+export * from "./cache/index.ts";
+export * from "./service_worker/index.ts";
 
