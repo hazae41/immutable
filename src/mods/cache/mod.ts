@@ -3,7 +3,7 @@ import type { Nullable } from "@/libs/nullable/mod.ts";
 
 export class Cache {
 
-  readonly name = `#${crypto.randomUUID()}`
+  readonly name: string = `#${crypto.randomUUID()}`
 
   constructor(
     readonly files: Map<string, string>
