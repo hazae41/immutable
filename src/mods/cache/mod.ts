@@ -3,15 +3,23 @@ import type { Nullable } from "@/libs/nullable/mod.ts";
 
 export class Cache {
 
+  readonly name = `/app/${crypto.randomUUID()}`
+
   constructor(
     readonly files: Map<string, string>
   ) { }
 
   /**
-   * Uncache all files
+   * Delete all previous caches
    */
   async uncache() {
-    await caches.delete("#files")
+    for (const name of await caches.keys()) {
+      if (!name.startsWith("/app/"))
+        continue
+      if (name === this.name)
+        continue
+      await caches.delete(name)
+    }
   }
 
   /**
@@ -35,7 +43,7 @@ export class Cache {
    */
   async defetch(request: Request, integrity: string): Promise<Response> {
     try {
-      const cache = await caches.open("#files")
+      const cache = await caches.open(this.name)
 
       /**
        * Check cache if possible
