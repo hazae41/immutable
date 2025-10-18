@@ -13,7 +13,7 @@ export class ServiceWorkerRegistrationWithUpdate {
 export async function register(crudeScriptRawUrl: string | URL, options: RegistrationOptions = {}): Promise<ServiceWorkerRegistrationWithUpdate> {
   const { scope, type } = options
 
-  // @ts-ignore: process
+  // @ts-ignore: process not found
   // deno-lint-ignore no-process-global
   if (process.env.NODE_ENV !== "production")
     return new ServiceWorkerRegistrationWithUpdate(await navigator.serviceWorker.register(crudeScriptRawUrl, { scope, type, updateViaCache: "none" }))
