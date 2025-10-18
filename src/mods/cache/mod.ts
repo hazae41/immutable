@@ -3,7 +3,7 @@ import type { Nullable } from "@/libs/nullable/mod.ts";
 
 export class Cache {
 
-  readonly name = `/app/${crypto.randomUUID()}`
+  readonly name = `#${crypto.randomUUID()}`
 
   constructor(
     readonly files: Map<string, string>
@@ -14,7 +14,7 @@ export class Cache {
    */
   async uncache() {
     for (const name of await caches.keys()) {
-      if (!name.startsWith("/app/"))
+      if (!name.startsWith("#"))
         continue
       if (name === this.name)
         continue
