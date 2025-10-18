@@ -21,8 +21,8 @@
     }
   },
   "devDependencies": {
-    "@hazae41/phobos": "^2.0.10",
-    "@hazae41/tscousin": "^1.0.23",
+    "@hazae41/phobos": "^2.0.13",
+    "@hazae41/tscousin": "^1.0.28",
     "typescript": "^5.9.3"
   },
   "keywords": [
