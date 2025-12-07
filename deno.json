@@ -1,6 +1,6 @@
 {
   "name": "@hazae41/immutable",
-  "version": "2.0.15",
+  "version": "2.0.16",
   "imports": {
     "@/": "./src/",
     "@hazae41/phobos": "jsr:@hazae41/phobos@^2.0.13",
