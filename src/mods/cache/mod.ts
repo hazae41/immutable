@@ -1,19 +1,26 @@
 import { Errors } from "../../libs/errors/mod.ts";
 import type { Nullable } from "../../libs/nullable/mod.ts";
 
-const names = await caches.keys().then(keys => keys.filter(key => key.startsWith("#")))
-
 export class Cacher {
 
-  constructor(
+  private constructor(
+    readonly names: string[],
     readonly files: Map<string, string>
   ) { }
+
+  static async from(files: Map<string, string>) {
+    const keys = await caches.keys()
+
+    const names = keys.filter(key => key.startsWith("#"))
+
+    return new Cacher(names, files)
+  }
 
   /**
    * Delete all previous caches
    */
   async uncache() {
-    for (const name of names.slice(0, -1))
+    for (const name of this.names.slice(0, -1))
       await caches.delete(name)
     return
   }
@@ -23,7 +30,7 @@ export class Cacher {
    * @returns 
    */
   async precache() {
-    names.push(`#${crypto.randomUUID()}`)
+    this.names.push(`#${crypto.randomUUID()}`)
 
     const promises = new Array<Promise<Response>>()
 
@@ -41,7 +48,7 @@ export class Cacher {
    */
   async defetch(request: Request, integrity: string): Promise<Response> {
     try {
-      const cache = await caches.open(names.at(-1))
+      const cache = await caches.open(this.names.at(-1))
 
       /**
        * Check cache if possible
