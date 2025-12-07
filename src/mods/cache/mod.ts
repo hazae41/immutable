@@ -8,7 +8,7 @@ export class Cacher {
     readonly files: Map<string, string>
   ) { }
 
-  static async from(files: Map<string, string>) {
+  static async from(files: Map<string, string>): Promise<Cacher> {
     const keys = await caches.keys()
 
     const names = keys.filter(key => key.startsWith("#"))
