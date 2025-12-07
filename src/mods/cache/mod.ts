@@ -3,26 +3,22 @@ import type { Nullable } from "../../libs/nullable/mod.ts";
 
 export class Cacher {
 
-  private constructor(
-    readonly names: string[],
+  constructor(
+    readonly cache: string,
     readonly files: Map<string, string>
   ) { }
 
-  static async from(files: Map<string, string>): Promise<Cacher> {
-    const keys = await caches.keys()
-
-    const names = keys.filter(key => key.startsWith("#"))
-
-    return new Cacher(names, files)
-  }
-
   /**
-   * Delete all previous caches
+   * Delete previous cache
    */
   async uncache() {
-    for (const name of this.names.slice(0, -1))
+    for (const name of await caches.keys()) {
+      if (!name.startsWith("#"))
+        continue
+      if (name === this.cache)
+        continue
       await caches.delete(name)
-    return
+    }
   }
 
   /**
@@ -30,8 +26,6 @@ export class Cacher {
    * @returns 
    */
   async precache() {
-    this.names.push(`#${crypto.randomUUID()}`)
-
     const promises = new Array<Promise<Response>>()
 
     for (const [file, integrity] of this.files)
@@ -48,7 +42,7 @@ export class Cacher {
    */
   async defetch(request: Request, integrity: string): Promise<Response> {
     try {
-      const cache = await caches.open(this.names.at(-1))
+      const cache = await caches.open(this.cache)
 
       /**
        * Check cache if possible
