@@ -1,7 +1,7 @@
 /// <reference types="./lib.d.ts" />
 
-import { getOrWaitActiveServiceWorkerOrThrow } from "@/libs/service_worker/mod.ts";
 import { Result } from "@hazae41/result-and-option";
+import { getOrWaitActiveServiceWorkerOrThrow } from "../../libs/service_worker/mod.ts";
 
 export class ServiceWorkerRegistrationWithUpdate {
 
@@ -44,10 +44,10 @@ export async function register(crudeScriptRawUrl: string | URL, options: Registr
     console.warn(`Service worker is distributed with a time-to-live of less than 1 year. Use it at your own risk.`)
 
   const crudeScriptDigest = new Uint8Array(await crypto.subtle.digest("SHA-256", await crudeScriptResponse.bytes()))
-  const crudeScriptVersion = crudeScriptDigest.toHex().slice(0, 6)
+  const crudeScriptIntegrity = `sha256-${crudeScriptDigest.toBase64()}`
 
   const freshScriptUrl = new URL(crudeScriptRawUrl, location.href)
-  freshScriptUrl.searchParams.set("version", crudeScriptVersion)
+  freshScriptUrl.searchParams.set("integrity", crudeScriptIntegrity)
 
   if (stale == null)
     return new ServiceWorkerRegistrationWithUpdate(await navigator.serviceWorker.register(freshScriptUrl, { scope, type, updateViaCache: "all" }))
