@@ -1,4 +1,3 @@
-import { Errors } from "../../libs/errors/mod.ts";
 import type { Nullable } from "../../libs/nullable/mod.ts";
 
 export class Cacher {
@@ -11,7 +10,7 @@ export class Cacher {
   /**
    * Delete previous cache
    */
-  async uncache() {
+  async uncache(): Promise<void> {
     for (const name of await caches.keys()) {
       if (!name.startsWith("#"))
         continue
@@ -25,11 +24,11 @@ export class Cacher {
    * Fetch and cache all files
    * @returns 
    */
-  async precache() {
-    const promises = new Array<Promise<Response>>()
+  async precache(): Promise<void> {
+    const promises = new Array<Promise<unknown>>()
 
     for (const [file, integrity] of this.files)
-      promises.push(this.defetch(new Request(file), integrity))
+      promises.push(this.defetch(new Request(file), integrity).catch(console.error))
 
     await Promise.all(promises)
   }
@@ -41,48 +40,51 @@ export class Cacher {
    * @returns 
    */
   async defetch(request: Request, integrity: string): Promise<Response> {
-    try {
-      const cache = await caches.open(this.cache)
+    const cache = await caches.open(this.cache)
 
-      /**
-       * Check cache if possible
-       */
-      if (request.cache !== "reload") {
-        const cached = await cache.match(request)
+    /**
+     * Check cache if possible
+     */
+    if (request.cache !== "reload") {
+      const cached = await cache.match(request)
 
-        if (cached != null)
-          /**
-           * Found
-           */
-          return cached
-
+      if (cached != null)
         /**
-         * Not found
+         * Found
          */
-      }
+        return cached
 
       /**
-       * Fetch but skip cache
+       * Not found
        */
-      const fetched = await fetch(request, { cache: "reload", redirect: "follow", integrity })
-
-      /**
-       * Remove junk properties e.g. redirected
-       */
-      const cleaned = new Response(fetched.body, fetched)
-
-      /**
-       * Cache the response
-       */
-      cache.put(request, cleaned.clone())
-
-      /**
-       * Found
-       */
-      return cleaned
-    } catch (e: unknown) {
-      return new Response(Errors.toString(e), { status: 500 })
     }
+
+    /**
+     * Fetch but skip cache
+     */
+    const fetched = await fetch(request, { cache: "reload", redirect: "follow", integrity })
+
+    if (!fetched.ok) {
+      /**
+       * Avoid caching bad responses (404, 500, etc.)
+       */
+      throw new Error(`Failed to fetch ${request.url}`, { cause: fetched })
+    }
+
+    /**
+     * Remove junk properties e.g. redirected
+     */
+    const cleaned = new Response(fetched.body, fetched)
+
+    /**
+     * Cache the response
+     */
+    cache.put(request, cleaned.clone())
+
+    /**
+     * Found
+     */
+    return cleaned
   }
 
   /**
