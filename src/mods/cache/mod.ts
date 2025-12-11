@@ -28,16 +28,9 @@ export class Cacher {
     const promises = new Array<Promise<unknown>>()
 
     for (const [file, integrity] of this.files)
-      promises.push(this.defetch(new Request(file), integrity).catch(console.error))
+      promises.push(this.defetch(new Request(file), integrity))
 
-    const responses = await Promise.all(promises)
-
-    if (responses.every(response => response != null))
-      return
-
-    await caches.delete(this.cache)
-
-    throw new Error("Failed to precache all files")
+    await Promise.all(promises)
   }
 
   /**
