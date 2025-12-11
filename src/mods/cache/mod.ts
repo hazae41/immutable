@@ -48,11 +48,12 @@ export class Cacher {
     if (request.cache !== "reload") {
       const cached = await cache.match(request)
 
-      if (cached != null)
+      if (cached != null) {
         /**
          * Found
          */
         return cached
+      }
 
       /**
        * Not found
