@@ -28,7 +28,7 @@ export class Cacher {
     const promises = new Array<Promise<unknown>>()
 
     for (const [file, integrity] of this.files)
-      promises.push(this.defetch(new Request(file), integrity).catch(console.error))
+      promises.push(this.defetch(new Request(file), integrity))
 
     await Promise.all(promises)
   }
