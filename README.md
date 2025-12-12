@@ -62,12 +62,9 @@ So you shouldn't use the service worker for anything important except caching yo
 
 The webapp is only compromisable when you first download it, when you manually update it, or when it's auto-updated after one year.
 
-## Subframeworks
-
-- [Next.js as Immutable](https://github.com/hazae41/next-as-immutable)
-
 ## Examples
 
 Here is a list of immutable webapps
 
-- https://wallet.brume.money / https://github.com/brumeproject/wallet
+- [Starter](https://github.com/hazae41/starter)
+- [Brume Website](https://github.com/brumeproject/www)
