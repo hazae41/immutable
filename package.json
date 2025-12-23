@@ -5,6 +5,7 @@
   "description": "Create immutable webapps",
   "repository": "github:hazae41/immutable",
   "author": "hazae41",
+  "license": "MIT",
   "scripts": {
     "examine": "deno lint ./src && deno check ./src && deno test ./src",
     "version": "deno -RW ./x.vsync.ts && git add deno.json",
