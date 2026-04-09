@@ -6,11 +6,7 @@ Create immutable webapps that are secure and resilient
 npm install @hazae41/immutable
 ```
 
-```bash
-deno install jsr:@hazae41/immutable
-```
-
-[**📦 NPM**](https://www.npmjs.com/package/@hazae41/immutable) • [**📦 JSR**](https://jsr.io/@hazae41/immutable)
+[**📦 NPM**](https://www.npmjs.com/package/@hazae41/immutable)
 
 ## Philosophy
 
