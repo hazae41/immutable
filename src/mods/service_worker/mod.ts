@@ -10,6 +10,12 @@ export class ServiceWorkerRegistrationWithUpdate {
 
 }
 
+/**
+ * Register a service worker with cache-busting and update mechanism
+ * @param scriptURL
+ * @param options 
+ * @returns service worker registration with update mechanism
+ */
 export async function register(crudeScriptRawUrl: string | URL, options: RegistrationOptions = {}): Promise<ServiceWorkerRegistrationWithUpdate> {
   const { scope, type } = options
 
