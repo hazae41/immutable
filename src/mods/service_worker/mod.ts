@@ -20,6 +20,8 @@ export async function register(crudeScriptRawUrl: string | URL, options: Registr
   /**
    * If development, return crude version without cache
    */
+  // @ts-ignore: process not found
+  // deno-lint-ignore no-process-global
   if (process.env.NODE_ENV !== "production")
     return { registration: await navigator.serviceWorker.register(crudeScriptRawUrl, { scope, type, updateViaCache: "none" }) }
 
