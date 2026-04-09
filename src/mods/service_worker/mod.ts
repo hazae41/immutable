@@ -101,15 +101,23 @@ export async function register(crudeScriptRawUrl: string | URL, options: Registr
   freshScriptUrl.searchParams.set("integrity", crudeScriptIntegrity)
 
   /**
-   * If no active stale version, register the fresh version and return it as-is without update
+   * If no stale version, register the fresh version and return it as-is without update
    */
-  if (staleScriptReg?.active == null)
+  if (staleScriptReg == null)
+    return { registration: await navigator.serviceWorker.register(freshScriptUrl, { scope, type, updateViaCache: "all" }) }
+
+  const staleScriptWorker = staleScriptReg.installing || staleScriptReg.waiting || staleScriptReg.active
+
+  /**
+   * If no stale version, register the fresh version and return it as-is without update
+   */
+  if (staleScriptWorker == null)
     return { registration: await navigator.serviceWorker.register(freshScriptUrl, { scope, type, updateViaCache: "all" }) }
 
   /**
    * Compute stale version URL
    */
-  const staleScriptUrl = new URL(staleScriptReg.active.scriptURL, location.href)
+  const staleScriptUrl = new URL(staleScriptWorker.scriptURL, location.href)
 
   /**
    * If same, return stale version as-is without update
