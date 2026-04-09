@@ -1,4 +1,4 @@
-import type { Nullable } from "../../libs/nullable/mod.ts";
+import type { Nullable } from "@/libs/nullable/mod.ts";
 
 export class Cacher {
 

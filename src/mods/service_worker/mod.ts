@@ -1,5 +1,3 @@
-/// <reference types="./lib.d.ts" />
-
 import { getOrWaitActiveServiceWorkerOrThrow } from "@/libs/service_worker/mod.ts";
 import { Result } from "@hazae41/result-and-option";
 
