@@ -1,4 +1,3 @@
-import { getOrWaitActiveServiceWorkerOrThrow } from "@/libs/service_worker/mod.ts";
 import { Result } from "@hazae41/result-and-option";
 
 export interface ServiceWorkerRegistrationWithUpdate {
@@ -25,26 +24,45 @@ export async function register(crudeScriptRawUrl: string | URL, options: Registr
     return { registration: await navigator.serviceWorker.register(crudeScriptRawUrl, { scope, type, updateViaCache: "none" }) }
 
   /**
+   * If Apple, return crude version without cache, as Safari does not support cache-busting, especially in PWAs
+   */
+  if (/Apple/.test(navigator.vendor))
+    return { registration: await navigator.serviceWorker.register(crudeScriptRawUrl, { scope, type, updateViaCache: "none" }) }
+
+  /**
    * Get stale version or null
    */
-  const stale = await navigator.serviceWorker.getRegistration(scope)
+  const staleScriptReg = await navigator.serviceWorker.getRegistration(scope)
+
+  /**
+   * Compute crude version URL
+   */
+  const crudeScriptUrl = new URL(crudeScriptRawUrl, location.href)
 
   /**
    * Try to fetch the crude version
    */
-  const crudeScriptUrl = new URL(crudeScriptRawUrl, location.href)
   const crudeScriptResult = await Result.runAndWrap(() => fetch(crudeScriptUrl, { cache: "reload" }))
 
   /**
    * Upon failure, if stale version, return it as-is without update
    */
-  if (crudeScriptResult.isErr() && stale != null)
-    return { registration: stale }
+  if (crudeScriptResult.isErr() && staleScriptReg != null)
+    return { registration: staleScriptReg }
 
   /**
    * Upon failure, if no stale version, throw
    */
-  const crudeScriptResponse = crudeScriptResult.getOrThrow()
+  if (crudeScriptResult.isErr())
+    throw new Error(`Could not fetch service worker`, { cause: crudeScriptResult.getErr() })
+
+  const crudeScriptResponse = crudeScriptResult.get()
+
+  /**
+   * Upon inner failure, if stale version, return it as-is without update
+   */
+  if (!crudeScriptResponse.ok && staleScriptReg != null)
+    return { registration: staleScriptReg }
 
   /**
    * Upon inner failure, if no stale version, throw
@@ -75,31 +93,30 @@ export async function register(crudeScriptRawUrl: string | URL, options: Registr
   const crudeScriptIntegrity = `sha256-${crudeScriptDigest.toBase64()}`
 
   /**
-   * Get fresh version by applying cache-busting to the crude version
+   * Compute fresh version URL by applying cache-busting to the crude version URL
    */
   const freshScriptUrl = new URL(crudeScriptRawUrl, location.href)
   freshScriptUrl.searchParams.set("integrity", crudeScriptIntegrity)
 
   /**
-   * If no stale version, register the fresh version and return it as-is without update
+   * If no active stale version, register the fresh version and return it as-is without update
    */
-  if (stale == null)
+  if (staleScriptReg?.active == null)
     return { registration: await navigator.serviceWorker.register(freshScriptUrl, { scope, type, updateViaCache: "all" }) }
 
   /**
-   * Get stale version
+   * Compute stale version URL
    */
-  const staleScriptWorker = await getOrWaitActiveServiceWorkerOrThrow(stale)
-  const staleScriptUrl = new URL(staleScriptWorker.scriptURL, location.href)
+  const staleScriptUrl = new URL(staleScriptReg.active.scriptURL, location.href)
 
   /**
    * If same, return stale version as-is without update
    */
   if (staleScriptUrl.href === freshScriptUrl.href)
-    return { registration: stale }
+    return { registration: staleScriptReg }
 
   /**
    * If different, return stale version with update to fresh version
    */
-  return { registration: stale, update: () => navigator.serviceWorker.register(freshScriptUrl, { scope, type, updateViaCache: "all" }) }
+  return { registration: staleScriptReg, update: () => navigator.serviceWorker.register(freshScriptUrl, { scope, type, updateViaCache: "all" }) }
 }
