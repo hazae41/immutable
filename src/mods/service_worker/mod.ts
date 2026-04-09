@@ -1,12 +1,11 @@
 import { getOrWaitActiveServiceWorkerOrThrow } from "@/libs/service_worker/mod.ts";
 import { Result } from "@hazae41/result-and-option";
 
-export class ServiceWorkerRegistrationWithUpdate {
+export interface ServiceWorkerRegistrationWithUpdate {
 
-  constructor(
-    readonly registration: ServiceWorkerRegistration,
-    readonly update?: () => Promise<ServiceWorkerRegistration>
-  ) { }
+  readonly registration: ServiceWorkerRegistration
+
+  update?(): Promise<ServiceWorkerRegistration>
 
 }
 
@@ -23,7 +22,7 @@ export async function register(crudeScriptRawUrl: string | URL, options: Registr
    * If development, return crude version without cache
    */
   if (process.env.NODE_ENV !== "production")
-    return new ServiceWorkerRegistrationWithUpdate(await navigator.serviceWorker.register(crudeScriptRawUrl, { scope, type, updateViaCache: "none" }))
+    return { registration: await navigator.serviceWorker.register(crudeScriptRawUrl, { scope, type, updateViaCache: "none" }) }
 
   /**
    * Get stale version or null
@@ -40,7 +39,7 @@ export async function register(crudeScriptRawUrl: string | URL, options: Registr
    * Upon failure, if stale version, return it as-is without update
    */
   if (crudeScriptResult.isErr() && stale != null)
-    return new ServiceWorkerRegistrationWithUpdate(stale)
+    return { registration: stale }
 
   /**
    * Upon failure, if no stale version, throw
@@ -85,7 +84,7 @@ export async function register(crudeScriptRawUrl: string | URL, options: Registr
    * If no stale version, register the fresh version and return it as-is without update
    */
   if (stale == null)
-    return new ServiceWorkerRegistrationWithUpdate(await navigator.serviceWorker.register(freshScriptUrl, { scope, type, updateViaCache: "all" }))
+    return { registration: await navigator.serviceWorker.register(freshScriptUrl, { scope, type, updateViaCache: "all" }) }
 
   /**
    * Get stale version
@@ -97,10 +96,10 @@ export async function register(crudeScriptRawUrl: string | URL, options: Registr
    * If same, return stale version as-is without update
    */
   if (staleScriptUrl.href === freshScriptUrl.href)
-    return new ServiceWorkerRegistrationWithUpdate(stale)
+    return { registration: stale }
 
   /**
    * If different, return stale version with update to fresh version
    */
-  return new ServiceWorkerRegistrationWithUpdate(stale, () => navigator.serviceWorker.register(freshScriptUrl, { scope, type, updateViaCache: "all" }))
+  return { registration: stale, update: () => navigator.serviceWorker.register(freshScriptUrl, { scope, type, updateViaCache: "all" }) }
 }
