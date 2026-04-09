@@ -96,27 +96,42 @@ export class Cacher {
   handle(request: Request): Nullable<Promise<Response>> {
     const url = new URL(request.url)
 
-    if (url.pathname.endsWith("/"))
-      url.pathname = url.pathname.slice(0, -1)
+    if (url.origin !== self.origin)
+      return
 
-    const integrity = this.files.get(url.pathname)
+    const url0 = new URL(url.pathname, self.origin)
+
+    if (url0.pathname.endsWith("/"))
+      url0.pathname = url0.pathname.slice(0, -1)
+
+    const integrity = this.files.get(url0.pathname)
 
     if (integrity != null) {
       /**
+       * Modify mode
+       */
+      const request0 = new Request(request, { mode: "same-origin" })
+
+      /**
+       * Modify url
+       */
+      const request1 = new Request(url0, request0)
+
+      /**
        * Do magic
        */
-      return this.defetch(request, integrity)
+      return this.defetch(request1, integrity)
     }
 
     /**
      * Match /index.html
      */
-    if (url.pathname === "/") {
-      const url2 = new URL(url)
+    if (url0.pathname === "/") {
+      const url1 = new URL(url0)
 
-      url2.pathname = "/index.html"
+      url1.pathname = "/index.html"
 
-      const integrity = this.files.get(url2.pathname)
+      const integrity = this.files.get(url1.pathname)
 
       if (integrity != null) {
         /**
@@ -127,7 +142,7 @@ export class Cacher {
         /**
          * Modify url
          */
-        const request1 = new Request(url2, request0)
+        const request1 = new Request(url1, request0)
 
         /**
          * Do magic
@@ -139,12 +154,12 @@ export class Cacher {
     /**
      * Match <pathname>.html
      */
-    if (url.pathname !== "/") {
-      const url2 = new URL(url)
+    if (url0.pathname !== "/") {
+      const url1 = new URL(url0)
 
-      url2.pathname += ".html"
+      url1.pathname += ".html"
 
-      const integrity = this.files.get(url2.pathname)
+      const integrity = this.files.get(url1.pathname)
 
       if (integrity != null) {
         /**
@@ -155,7 +170,7 @@ export class Cacher {
         /**
          * Modify url
          */
-        const request1 = new Request(url2, request0)
+        const request1 = new Request(url1, request0)
 
         /**
          * Do magic
@@ -167,12 +182,12 @@ export class Cacher {
     /**
      * Match <pathname>/index.html
      */
-    if (url.pathname !== "/") {
-      const url2 = new URL(url)
+    if (url0.pathname !== "/") {
+      const url1 = new URL(url0)
 
-      url2.pathname += "/index.html"
+      url1.pathname += "/index.html"
 
-      const integrity = this.files.get(url2.pathname)
+      const integrity = this.files.get(url1.pathname)
 
       if (integrity != null) {
 
@@ -184,7 +199,7 @@ export class Cacher {
         /**
          * Modify url
          */
-        const request1 = new Request(url2, request0)
+        const request1 = new Request(url1, request0)
 
         /**
          * Do magic
