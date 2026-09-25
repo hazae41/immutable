@@ -26,12 +26,6 @@ export async function register(crudeScriptRawUrl: string | URL, options: Registr
     return { registration: await navigator.serviceWorker.register(crudeScriptRawUrl, { scope, type, updateViaCache: "none" }) }
 
   /**
-   * If Apple, return crude version without cache, as Safari does not support cache-busting, especially in PWAs
-   */
-  if (/Apple/.test(navigator.vendor))
-    return { registration: await navigator.serviceWorker.register(crudeScriptRawUrl, { scope, type, updateViaCache: "none" }) }
-
-  /**
    * Get stale version or null
    */
   const staleScriptReg = await navigator.serviceWorker.getRegistration(scope)
